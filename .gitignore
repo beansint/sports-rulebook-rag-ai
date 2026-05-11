@@ -6,15 +6,21 @@ node_modules/
 # Testing
 coverage/
 .nyc_output/
+playwright-report/
+test-results/
+tsconfig.tsbuildinfo
 
 # Production build
 .next/
 out/
 dist/
+.vercel/
+.turbo/
 
 # Environment variables
 .env
 .env.local
+.env.*.local
 .env.development.local
 .env.test.local
 .env.production.local
@@ -49,12 +55,16 @@ pids/
 # Temporary files
 tmp/
 temp/
+.cache/
 
 # Local MCP configuration with credentials
 .mcp.json
 
 # Claude Code local configuration
 .claude/settings.local.json
+
+# Supabase local state
+.supabase/
 
 # Project-specific
 # Downloaded PDFs and raw rulebooks (before processing)
