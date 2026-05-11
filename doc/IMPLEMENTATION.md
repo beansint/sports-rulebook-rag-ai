@@ -8,14 +8,23 @@ This document tracks implementation decisions, live infrastructure, API contract
 
 ## Supabase Project
 
-- Organization: `VBP Org` (`dtcsjabiyondyzebbiae`)
+- Organization: `VBP Org`
 - Project name: `sportrules-ai`
-- Project ref: `mzlyblyegxxkexldstha`
+- Project ref: stored in environment/secret manager
 - Region: `ap-southeast-1`
-- Project URL: `https://mzlyblyegxxkexldstha.supabase.co`
+- Project URL: stored in environment/secret manager
 - Storage bucket: `rulebooks` (private)
 - GitHub repository: `https://github.com/beansint/sports-rulebook-rag-ai`
 - Project cost confirmation: `$0/month` reported by Supabase before creation
+
+## Deployment Targets
+
+- GitHub integration branch model:
+- `dev`: integration branch for feature PRs and CI.
+- `main`: production branch for release deployments.
+- Supabase target: `sportrules-ai` (project ref is managed as a secret).
+- Vercel team: `beansint's projects` (team ID is managed as a secret).
+- Vercel project ID: tracked as GitHub secret `VERCEL_PROJECT_ID` after project import/bootstrap.
 
 ## Environment Contract
 
@@ -168,6 +177,26 @@ Pricing source: https://platform.openai.com/docs/pricing/
 - [x] `/api/ingest` rejects external league CDN URLs.
 - [x] `pnpm run typecheck` passes.
 - [x] `pnpm build` passes.
+
+## CI/CD Setup
+
+GitHub Actions workflows added:
+
+- `.github/workflows/ci.yml`: installs dependencies, runs typecheck and build on PR/push to `dev` and `main`.
+- `.github/workflows/supabase-migrations.yml`:
+- PRs touching `supabase/migrations/*.sql`: validate migration filename convention and run `supabase db push --dry-run`.
+- Pushes to `main` touching migrations (or manual dispatch): apply migrations with `supabase db push`.
+- `.github/workflows/vercel-preview.yml`: deploy preview builds for non-draft PRs and comment deployment URL.
+- `.github/workflows/vercel-production.yml`: deploy production for `main` pushes and manual dispatch.
+
+Required GitHub secrets:
+
+- Supabase: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `SUPABASE_PROJECT_ID`.
+- Vercel: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`.
+
+Operational note:
+
+- Vercel project creation/import is a one-time manual step if `VERCEL_PROJECT_ID` does not exist yet.
 
 Advisor notes:
 
