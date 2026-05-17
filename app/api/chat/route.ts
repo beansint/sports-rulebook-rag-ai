@@ -1,0 +1,87 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { isAdminRequest } from "@/lib/admin";
+import { embedText } from "@/lib/embeddings";
+import { errorResponse } from "@/lib/errors";
+import { generateAnswer } from "@/lib/generation";
+import { selectModel } from "@/lib/models";
+import { retrieveChunks, toCitationPayload } from "@/lib/rag";
+import { getSupabaseAdmin } from "@/lib/supabase";
+
+export const runtime = "nodejs";
+export const maxDuration = 60;
+
+const chatSchema = z.object({
+  question: z.string().min(1).max(1200),
+  sport: z.string().min(2).max(32).default("nba").transform((value) => value.toLowerCase()),
+  modelId: z.string().min(1).max(120).optional(),
+});
+
+export async function POST(request: Request) {
+  const startedAt = Date.now();
+
+  try {
+    const input = chatSchema.parse(await request.json());
+    const supabase = getSupabaseAdmin();
+    const admin = isAdminRequest(request);
+    const model = await selectModel(supabase, input.modelId, admin);
+    const { embedding } = await embedText(input.question);
+    const chunks = await retrieveChunks(supabase, embedding, input.sport);
+    const citations = chunks.map(toCitationPayload);
+    const generated = await generateAnswer(input.question, chunks, model);
+    const latencyMs = Date.now() - startedAt;
+
+    const { data: query, error: queryError } = await supabase
+      .from("queries")
+      .insert({
+        sport: input.sport,
+        question: input.question,
+        answer: generated.answer,
+        latency_ms: latencyMs,
+        model_id: model.id,
+        provider: model.provider,
+        input_tokens: generated.usage.inputTokens,
+        output_tokens: generated.usage.outputTokens,
+        total_tokens: generated.usage.totalTokens,
+        ...generated.costFields,
+        retrieved_chunks: citations,
+      })
+      .select("id")
+      .single();
+
+    if (queryError) throw queryError;
+
+    if (citations.length > 0) {
+      const { error: citationError } = await supabase.from("citations").insert(
+        citations.map((citation) => ({
+          query_id: query.id,
+          document_id: citation.documentId,
+          chunk_id: citation.chunkId,
+          page_number: citation.pageNumber,
+          snippet: citation.snippet,
+          score: citation.score,
+        })),
+      );
+
+      if (citationError) throw citationError;
+    }
+
+    return NextResponse.json({
+      queryId: query.id,
+      answer: generated.answer,
+      citations,
+      model: {
+        modelId: model.id,
+        provider: model.provider,
+      },
+      usage: generated.usage,
+      latencyMs,
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: "Invalid chat request", details: error.flatten() }, { status: 400 });
+    }
+
+    return errorResponse(error);
+  }
+}

@@ -56,6 +56,11 @@ The four target sources:
 - The `modelId` param in `/api/chat` is only honored for admins in v1; non-admins always use the default model
 - Answer generation must be context-constrained: if the answer isn't in retrieved chunks, respond with "I don't know / not covered by the rulebook"
 
+## Contribution Hygiene
+
+- Do not include generator, tool, or model attribution banners in commit messages, PR titles/descriptions, code comments, or docs unless explicitly requested.
+- Avoid boilerplate generator footers in committed files.
+
 ## Success Metrics (v1)
 - Retrieval relevance ≥ 0.85, groundedness ≥ 0.90, answer relevance ≥ 0.85
 - "I don't know" correctness ≥ 0.90 on unanswerable queries
