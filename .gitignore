@@ -79,3 +79,7 @@ results/
 # Temporary API keys and tokens (if hardcoded anywhere)
 *.key
 *.secret
+
+# Tool artifacts
+.codex/
+supabase/.temp/
