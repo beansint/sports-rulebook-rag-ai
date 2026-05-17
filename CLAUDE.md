@@ -62,11 +62,16 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
 ### Commit message format
 ```
-<type>(<scope>): <short description>
+<type>(<scope>): <short description> #N
 
-[optional body]
-[optional footer — Closes #N]
+[body — what changed and why, not just what]
+
+[Closes #N]
 ```
+
+- Always reference the related issue number `#N` in both the subject line and footer
+- Body is required when the change isn't self-evident from the subject — explain the *why*
+- `Closes #N` in the footer auto-closes the issue on PR merge
 
 **Types:** `feat` · `fix` · `chore` · `docs` · `refactor` · `test` · `ci` · `perf` · `style`
 
@@ -74,10 +79,49 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
 **Examples:**
 ```
-feat(rag): add sport filter to vector search
-fix(api): return 400 when fileUrl is not Supabase Storage
-chore(db): add index on chunks.document_id
-ci: cache pnpm store in validation workflow
+feat(rag): add sport filter to vector search #14
+
+Filters pgvector similarity search by the `sport` column so queries
+never surface chunks from a different rulebook.
+
+Closes #14
+```
+```
+fix(api): return 400 when fileUrl is not Supabase Storage #17
+chore(db): add index on chunks.document_id #19
+ci: cache pnpm store in validation workflow #21
+```
+
+### Atomic commits — group files by concern
+
+Never `git add .` and commit everything at once. Stage and commit files in logical groups — one commit per distinct concern within the same branch.
+
+**How to split:**
+| Group | Examples |
+|---|---|
+| Schema / migrations | `supabase/migrations/*.sql` |
+| API route | `app/api/<route>/route.ts` + its lib helper |
+| Lib module | `lib/chunking.ts`, `lib/embeddings.ts` (one per module) |
+| Types | `types/*.ts` |
+| Config / tooling | `next.config.ts`, `tsconfig.json`, `.gitignore` |
+| CI | `.github/workflows/*.yml`, `.github/scripts/*` |
+| Docs | `CLAUDE.md`, `doc/*.md`, `README.md` |
+
+**Example — a feature that adds a new API route:**
+```bash
+git add supabase/migrations/20260517_add_feedback_index.sql
+git commit -m "chore(db): add index on feedback.query_id #14"
+
+git add lib/cost.ts
+git commit -m "feat(api): compute per-query cost from model rates #14"
+
+git add app/api/feedback/route.ts
+git commit -m "feat(api): add POST /api/feedback endpoint #14
+
+Stores thumbs up/down + optional comment against a query_id.
+Validates that the query exists before inserting.
+
+Closes #14"
 ```
 
 ### Branch naming
@@ -93,7 +137,7 @@ Examples: `feat/pdf-viewer`, `fix/chat-timeout`, `chore/update-deps`, `docs/api-
 ### PR and issue flow
 1. Create a GitHub issue first (`gh issue create --assignee @me`)
 2. Branch off `dev`: `git checkout -b <type>/<slug>`
-3. Commit using Conventional Commits
+3. Commit in atomic groups, each referencing `#N`
 4. PR targets `dev` with `Closes #N` in the body
 5. `main` receives merges from `dev` only for releases — never commit directly to `main` or `dev`
 
