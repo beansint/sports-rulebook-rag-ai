@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getSupabaseServer } from "@/lib/supabase/server";
 import { signOut } from "@/app/login/actions";
 
 const NAV_LINKS = [
@@ -8,12 +9,12 @@ const NAV_LINKS = [
   { href: "/#cta", label: "Pricing" },
 ];
 
-type HeaderUser = {
-  email: string;
-  isAdmin: boolean;
-};
+export async function Header() {
+  const supabase = await getSupabaseServer();
+  const { data: { user } } = await supabase.auth.getUser();
 
-export function Header({ user }: { user?: HeaderUser }) {
+  const isAdmin = user?.email === process.env.ADMIN_EMAIL;
+
   return (
     <header className="fixed top-0 w-full z-50 bg-brand-black/80 backdrop-blur-md border-b border-white/10">
       <nav
@@ -49,7 +50,7 @@ export function Header({ user }: { user?: HeaderUser }) {
 
         {user ? (
           <div className="flex items-center gap-3">
-            {user.isAdmin && (
+            {isAdmin && (
               <Link
                 href="/admin/users"
                 className="hidden sm:block text-xs font-bold uppercase tracking-widest text-brand-orange hover:text-brand-orange/70 transition-colors"
@@ -59,13 +60,13 @@ export function Header({ user }: { user?: HeaderUser }) {
             )}
             <div
               className="flex items-center gap-2 px-3 py-1.5 rounded-sm border border-white/10 bg-white/5"
-              title={user.email}
+              title={user.email ?? ""}
             >
               <span
                 className="w-6 h-6 rounded-full bg-brand-orange flex items-center justify-center text-xs font-bold text-white shrink-0"
                 aria-hidden
               >
-                {user.email[0].toUpperCase()}
+                {(user.email ?? "?")[0].toUpperCase()}
               </span>
               <span className="hidden sm:block text-xs text-white/60 max-w-40 truncate">
                 {user.email}
