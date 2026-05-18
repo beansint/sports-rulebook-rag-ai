@@ -7,6 +7,7 @@ import { generateAnswer } from "@/lib/generation";
 import { selectModel } from "@/lib/models";
 import { retrieveChunks, toCitationPayload } from "@/lib/rag";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { getSupabaseServer } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -21,6 +22,12 @@ export async function POST(request: Request) {
   const startedAt = Date.now();
 
   try {
+    const serverClient = await getSupabaseServer();
+    const { data: { user } } = await serverClient.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const input = chatSchema.parse(await request.json());
     const supabase = getSupabaseAdmin();
     const admin = isAdminRequest(request);
@@ -34,6 +41,7 @@ export async function POST(request: Request) {
     const { data: query, error: queryError } = await supabase
       .from("queries")
       .insert({
+        user_id: user.id,
         sport: input.sport,
         question: input.question,
         answer: generated.answer,
