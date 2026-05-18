@@ -1,14 +1,23 @@
+import { Header } from "./components/Header";
+import { Hero } from "./components/Hero";
+import { TrustStrip } from "./components/TrustStrip";
+import { DashboardPreview } from "./components/DashboardPreview";
+import { FeatureBlocks } from "./components/FeatureBlocks";
+import { CTASection } from "./components/CTASection";
+import { Footer } from "./components/Footer";
+
 export default function Home() {
   return (
-    <main className="shell">
-      <section className="panel">
-        <p className="eyebrow">SportRules AI</p>
-        <h1>Backend MVP is ready for API integration.</h1>
-        <p>
-          Use the API routes under <code>/api</code> for ingestion, chat, model registry,
-          and feedback. The full chat and PDF viewer UI are intentionally deferred.
-        </p>
-      </section>
-    </main>
+    <div className="min-h-dvh flex flex-col bg-brand-black text-white">
+      <Header />
+      <main>
+        <Hero />
+        <TrustStrip />
+        <DashboardPreview />
+        <FeatureBlocks />
+        <CTASection />
+      </main>
+      <Footer />
+    </div>
   );
 }

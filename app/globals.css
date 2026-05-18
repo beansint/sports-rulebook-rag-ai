@@ -1,73 +1,118 @@
-:root {
-  color-scheme: light;
-  --ink: #182018;
-  --muted: #5e685f;
-  --panel: #fffdf3;
-  --field: #f4ead2;
-  --accent: #ba4e19;
-  --bg: #ebe0c6;
+@import "tailwindcss";
+
+@theme {
+  /* ─── Brand palette ──────────────────────────────────────── */
+  --color-brand-black: #0e0e0e;
+  --color-brand-gray: #1a1a1a;
+  --color-brand-light-gray: #2a2a2a;
+  --color-brand-orange: #ff6b00;
+  --color-brand-orange-hover: #e66000;
+  --color-brand-white: #ffffff;
+  --color-brand-muted: #9ca3af;
+  --color-brand-dim: #6b7280;
+
+  /* ─── Typography ─────────────────────────────────────────── */
+  --font-heading: var(--font-anton), Impact, "Arial Narrow", sans-serif;
+  --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-* {
+/* ─── Base reset ──────────────────────────────────────────── */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
 }
 
 body {
   margin: 0;
-  min-height: 100vh;
-  color: var(--ink);
-  background:
-    radial-gradient(circle at 18% 18%, rgba(186, 78, 25, 0.16), transparent 32rem),
-    linear-gradient(135deg, #f7f0dc 0%, var(--bg) 56%, #d7c5a2 100%);
-  font-family: Georgia, "Times New Roman", serif;
+  min-height: 100dvh;
+  color: var(--color-brand-white);
+  background-color: var(--color-brand-black);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.shell {
-  display: grid;
-  min-height: 100vh;
-  place-items: center;
-  padding: 2rem;
+::selection {
+  background: var(--color-brand-orange);
+  color: var(--color-brand-white);
 }
 
-.panel {
-  width: min(720px, 100%);
-  border: 1px solid rgba(24, 32, 24, 0.18);
-  border-radius: 28px;
-  background: color-mix(in srgb, var(--panel) 92%, transparent);
-  box-shadow: 0 30px 80px rgba(44, 35, 18, 0.18);
-  padding: clamp(2rem, 5vw, 4rem);
+/* ─── Focus ring ──────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-brand-orange);
+  outline-offset: 2px;
 }
 
-.eyebrow {
-  margin: 0 0 1rem;
-  color: var(--accent);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+/* ─── Hero gradient + utility classes from the Stitch design ── */
+.hero-gradient {
+  background: linear-gradient(
+    to bottom,
+    rgba(14, 14, 14, 0.4) 0%,
+    rgba(14, 14, 14, 1) 90%
+  );
 }
 
-h1 {
-  margin: 0;
-  max-width: 12ch;
-  font-size: clamp(3rem, 10vw, 6rem);
-  line-height: 0.9;
-  letter-spacing: -0.07em;
+.text-outline {
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.3);
+  color: transparent;
 }
 
-p {
-  max-width: 58ch;
-  color: var(--muted);
-  font-size: 1.1rem;
-  line-height: 1.7;
+/* ─── Animations ──────────────────────────────────────────── */
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 5px rgba(255, 107, 0, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 107, 0, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(255, 107, 0, 0.2);
+  }
 }
 
-code {
-  border-radius: 0.35rem;
-  background: var(--field);
-  color: var(--ink);
-  padding: 0.12rem 0.32rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.9em;
+.glow-orange {
+  animation: glow 3s infinite ease-in-out;
+}
+
+@keyframes indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ─── Scrollbar (dark) ────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-brand-black);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-brand-light-gray);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-brand-orange);
 }
