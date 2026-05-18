@@ -1,73 +1,70 @@
-:root {
-  color-scheme: light;
-  --ink: #182018;
-  --muted: #5e685f;
-  --panel: #fffdf3;
-  --field: #f4ead2;
-  --accent: #ba4e19;
-  --bg: #ebe0c6;
+@import "tailwindcss";
+
+@theme {
+  /* Brand colors */
+  --color-ink: #182018;
+  --color-ink-muted: #5e685f;
+  --color-panel: #fffdf3;
+  --color-field: #f4ead2;
+  --color-accent: #ba4e19;
+  --color-accent-hover: #9e3f12;
+  --color-bg: #ebe0c6;
+  --color-bg-dark: #d7c5a2;
+
+  /* Typography */
+  --font-barlow: "Barlow", Georgia, serif;
+  --font-barlow-condensed: "Barlow Condensed", Georgia, serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-* {
+/* ─── Base reset ──────────────────────────────────────────── */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
 }
 
 body {
   margin: 0;
-  min-height: 100vh;
-  color: var(--ink);
-  background:
-    radial-gradient(circle at 18% 18%, rgba(186, 78, 25, 0.16), transparent 32rem),
-    linear-gradient(135deg, #f7f0dc 0%, var(--bg) 56%, #d7c5a2 100%);
-  font-family: Georgia, "Times New Roman", serif;
+  min-height: 100dvh;
+  color: var(--color-ink);
+  font-family: var(--font-barlow);
+  background-color: var(--color-panel);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.shell {
-  display: grid;
-  min-height: 100vh;
-  place-items: center;
-  padding: 2rem;
+/* ─── Focus ring ──────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
-.panel {
-  width: min(720px, 100%);
-  border: 1px solid rgba(24, 32, 24, 0.18);
-  border-radius: 28px;
-  background: color-mix(in srgb, var(--panel) 92%, transparent);
-  box-shadow: 0 30px 80px rgba(44, 35, 18, 0.18);
-  padding: clamp(2rem, 5vw, 4rem);
+/* ─── Animations ──────────────────────────────────────────── */
+@keyframes indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
 }
 
-.eyebrow {
-  margin: 0 0 1rem;
-  color: var(--accent);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+/* ─── Scrollbar ───────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
 }
-
-h1 {
-  margin: 0;
-  max-width: 12ch;
-  font-size: clamp(3rem, 10vw, 6rem);
-  line-height: 0.9;
-  letter-spacing: -0.07em;
+::-webkit-scrollbar-track {
+  background: var(--color-field);
 }
-
-p {
-  max-width: 58ch;
-  color: var(--muted);
-  font-size: 1.1rem;
-  line-height: 1.7;
-}
-
-code {
-  border-radius: 0.35rem;
-  background: var(--field);
-  color: var(--ink);
-  padding: 0.12rem 0.32rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.9em;
+::-webkit-scrollbar-thumb {
+  background: var(--color-ink-muted);
+  border-radius: 3px;
 }
