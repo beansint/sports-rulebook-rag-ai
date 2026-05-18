@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
 @theme {
-  /* Brand colors */
-  --color-ink: #182018;
-  --color-ink-muted: #5e685f;
-  --color-panel: #fffdf3;
-  --color-field: #f4ead2;
-  --color-accent: #ba4e19;
-  --color-accent-hover: #9e3f12;
-  --color-bg: #ebe0c6;
-  --color-bg-dark: #d7c5a2;
+  /* ─── Brand palette ──────────────────────────────────────── */
+  --color-brand-black: #0e0e0e;
+  --color-brand-gray: #1a1a1a;
+  --color-brand-light-gray: #2a2a2a;
+  --color-brand-orange: #ff6b00;
+  --color-brand-orange-hover: #e66000;
+  --color-brand-white: #ffffff;
+  --color-brand-muted: #9ca3af;
+  --color-brand-dim: #6b7280;
 
-  /* Typography */
-  --font-barlow: "Barlow", Georgia, serif;
-  --font-barlow-condensed: "Barlow Condensed", Georgia, serif;
+  /* ─── Typography ─────────────────────────────────────────── */
+  --font-heading: var(--font-anton), Impact, "Arial Narrow", sans-serif;
+  --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
@@ -25,26 +25,61 @@
 }
 
 html {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 body {
   margin: 0;
   min-height: 100dvh;
-  color: var(--color-ink);
-  font-family: var(--font-barlow);
-  background-color: var(--color-panel);
+  color: var(--color-brand-white);
+  background-color: var(--color-brand-black);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+::selection {
+  background: var(--color-brand-orange);
+  color: var(--color-brand-white);
+}
+
 /* ─── Focus ring ──────────────────────────────────────────── */
 :focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--color-brand-orange);
   outline-offset: 2px;
 }
 
+/* ─── Hero gradient + utility classes from the Stitch design ── */
+.hero-gradient {
+  background: linear-gradient(
+    to bottom,
+    rgba(14, 14, 14, 0.4) 0%,
+    rgba(14, 14, 14, 1) 90%
+  );
+}
+
+.text-outline {
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.3);
+  color: transparent;
+}
+
 /* ─── Animations ──────────────────────────────────────────── */
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 5px rgba(255, 107, 0, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 107, 0, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(255, 107, 0, 0.2);
+  }
+}
+
+.glow-orange {
+  animation: glow 3s infinite ease-in-out;
+}
+
 @keyframes indeterminate {
   0% {
     transform: translateX(-100%);
@@ -57,14 +92,27 @@ body {
   }
 }
 
-/* ─── Scrollbar ───────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ─── Scrollbar (dark) ────────────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-field);
+  background: var(--color-brand-black);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-ink-muted);
-  border-radius: 3px;
+  background: var(--color-brand-light-gray);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-brand-orange);
 }

@@ -1,30 +1,35 @@
 import type { Metadata } from "next";
+import { Anton, Inter } from "next/font/google";
 import "./globals.css";
 
+const anton = Anton({
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-anton",
+});
+
+const inter = Inter({
+  weight: ["300", "400", "600", "700"],
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
+
 export const metadata: Metadata = {
-  title: "SportRules AI — NBA Rulebook Assistant",
+  title: "SportRules AI — Precision In Every Play",
   description:
-    "Ask any NBA rule in plain English. Get grounded answers with exact citations from the official rulebook.",
+    "The world's most advanced AI for sports regulations. Ask any NBA rule in plain English and get grounded answers with exact citations from the official rulebook.",
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Barlow:wght@300;400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body>{children}</body>
+    <html lang="en" className={`${anton.variable} ${inter.variable}`}>
+      <body className="bg-brand-black text-white font-sans selection:bg-brand-orange selection:text-white">
+        {children}
+      </body>
     </html>
   );
 }
