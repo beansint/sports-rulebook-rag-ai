@@ -4,6 +4,8 @@ import { getSupabaseServer } from "@/lib/supabase/server";
 import { CreateUserForm } from "./CreateUserForm";
 import { DeleteUserButton } from "./DeleteUserButton";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminUsersPage() {
   const supabase = getSupabaseAdmin();
   const serverClient = await getSupabaseServer();
