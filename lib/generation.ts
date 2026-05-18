@@ -1,3 +1,4 @@
+import OpenAI from "openai";
 import type { ModelConfig, RetrievedChunk } from "@/types/rag";
 import { calculateUsageCost, splitUsageCost } from "./cost";
 import { estimateTokens } from "./text";
@@ -5,6 +6,18 @@ import { HttpError } from "./errors";
 import { getOpenAIClient } from "./openai";
 
 const ABSTAIN_ANSWER = "I don't know. The retrieved rulebook text does not cover that.";
+
+const PROVIDER_CONFIG: Record<string, { baseURL: string; apiKeyEnv: string } | undefined> = {
+  cerebras: { baseURL: "https://api.cerebras.ai/v1", apiKeyEnv: "CEREBRAS_API_KEY" },
+};
+
+function getProviderClient(provider: string): OpenAI {
+  const cfg = PROVIDER_CONFIG[provider];
+  if (!cfg) return getOpenAIClient();
+  const apiKey = process.env[cfg.apiKeyEnv];
+  if (!apiKey) throw new HttpError(500, `Missing env var: ${cfg.apiKeyEnv}`);
+  return new OpenAI({ apiKey, baseURL: cfg.baseURL });
+}
 
 export function buildContext(chunks: RetrievedChunk[]) {
   return chunks
@@ -21,10 +34,6 @@ export function buildContext(chunks: RetrievedChunk[]) {
 }
 
 export async function generateAnswer(question: string, chunks: RetrievedChunk[], model: ModelConfig) {
-  if (model.provider !== "openai") {
-    throw new HttpError(501, `Provider is not implemented in the backend MVP: ${model.provider}`);
-  }
-
   if (chunks.length === 0) {
     return {
       answer: ABSTAIN_ANSWER,
@@ -42,7 +51,7 @@ export async function generateAnswer(question: string, chunks: RetrievedChunk[],
   ].join(" ");
   const user = `Question: ${question}\n\nOfficial rulebook context:\n${context}`;
 
-  const completion = await getOpenAIClient().chat.completions.create({
+  const completion = await getProviderClient(model.provider).chat.completions.create({
     model: model.id,
     temperature: 0.1,
     max_tokens: 700,
