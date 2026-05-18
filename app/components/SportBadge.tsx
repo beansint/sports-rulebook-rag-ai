@@ -17,8 +17,8 @@ export function SportBadge({ sport, className }: SportBadgeProps) {
   return (
     <span
       className={clsx(
-        "inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold tracking-wider uppercase",
-        "bg-accent text-white font-[family-name:var(--font-barlow-condensed)]",
+        "inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-bold tracking-widest uppercase",
+        "bg-brand-orange text-white font-heading",
         className,
       )}
     >

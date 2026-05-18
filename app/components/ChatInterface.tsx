@@ -26,13 +26,13 @@ interface Message {
 
 interface ChatInterfaceProps {
   sport?: string;
-  /** When this changes, the input is pre-filled and the textarea is focused */
-  pendingQuestion?: string;
+  /** When provided, the input is seeded with this question and auto-submitted once on mount. */
+  initialQuestion?: string;
 }
 
 export function ChatInterface({
   sport = "nba",
-  pendingQuestion,
+  initialQuestion,
 }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -40,13 +40,7 @@ export function ChatInterface({
   const [error, setError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (pendingQuestion) {
-      setInput(pendingQuestion);
-      textareaRef.current?.focus();
-    }
-  }, [pendingQuestion]);
+  const autoSubmittedRef = useRef(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -102,6 +96,15 @@ export function ChatInterface({
     }
   };
 
+  // Auto-submit when initialQuestion is provided (e.g. arriving from /chat?q=...)
+  useEffect(() => {
+    if (initialQuestion && !autoSubmittedRef.current) {
+      autoSubmittedRef.current = true;
+      handleSubmit(initialQuestion);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialQuestion]);
+
   const handleFeedback = async (
     msgId: string,
     queryId: string,
@@ -129,25 +132,25 @@ export function ChatInterface({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-brand-gray border border-white/10 rounded-xl overflow-hidden">
       {/* Messages area */}
       <div
-        className="flex-1 overflow-y-auto space-y-6 px-4 py-4 min-h-[320px] max-h-[520px]"
+        className="flex-1 overflow-y-auto space-y-6 px-5 py-5 min-h-[420px] max-h-[640px]"
         aria-live="polite"
         aria-label="Conversation"
       >
         {messages.length === 0 && !isLoading && (
           <div className="flex flex-col items-center justify-center h-full py-12 text-center">
-            <div className="w-12 h-12 rounded-xl bg-[color:var(--color-field)] flex items-center justify-center mb-3">
+            <div className="w-12 h-12 rounded-sm bg-brand-orange flex items-center justify-center mb-4">
               <span
-                className="text-2xl font-black font-[family-name:var(--font-barlow-condensed)] text-[color:var(--color-accent)] leading-none"
+                className="text-xl font-heading text-white leading-none"
                 aria-hidden
               >
-                SR
+                S
               </span>
             </div>
-            <p className="text-[color:var(--color-ink-muted)] text-sm">
-              Ask a question about NBA rules above
+            <p className="text-brand-muted text-sm">
+              Ask a question about NBA rules below
             </p>
           </div>
         )}
@@ -160,11 +163,24 @@ export function ChatInterface({
               "items-start": msg.role === "assistant",
             })}
           >
+            {/* Bubble label */}
+            <p
+              className={clsx(
+                "text-[10px] font-bold uppercase tracking-widest px-1",
+                {
+                  "text-brand-orange": msg.role === "assistant",
+                  "text-brand-muted": msg.role === "user",
+                },
+              )}
+            >
+              {msg.role === "assistant" ? "SportRules AI" : "You"}
+            </p>
+
             {/* Bubble */}
             <div
-              className={clsx("rounded-2xl px-4 py-3 max-w-[85%] text-sm leading-relaxed", {
-                "bg-[color:var(--color-accent)] text-white rounded-br-sm": msg.role === "user",
-                "bg-[color:var(--color-field)] text-[color:var(--color-ink)] rounded-bl-sm": msg.role === "assistant",
+              className={clsx("rounded-lg px-4 py-3 max-w-[90%] text-sm leading-relaxed", {
+                "bg-brand-orange text-white": msg.role === "user",
+                "bg-brand-orange/10 border border-brand-orange/20 text-gray-100": msg.role === "assistant",
               })}
             >
               {msg.content}
@@ -172,8 +188,8 @@ export function ChatInterface({
 
             {/* Citations */}
             {msg.role === "assistant" && msg.citations && msg.citations.length > 0 && (
-              <div className="w-full max-w-[85%] space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-[color:var(--color-ink-muted)] px-1">
+              <div className="w-full max-w-[90%] space-y-1.5">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-brand-muted px-1">
                   Sources
                 </p>
                 {msg.citations.map((cit, i) => (
@@ -188,7 +204,7 @@ export function ChatInterface({
                 className="flex gap-1 items-center"
                 aria-label="Rate this answer"
               >
-                <span className="text-[10px] text-[color:var(--color-ink-muted)] mr-1">
+                <span className="text-[10px] uppercase tracking-widest text-brand-muted mr-1">
                   Helpful?
                 </span>
                 <Button
@@ -199,8 +215,8 @@ export function ChatInterface({
                   className={clsx(
                     "p-1.5 rounded-md transition-colors cursor-pointer",
                     msg.feedback === 1
-                      ? "text-[color:var(--color-accent)] bg-[color:var(--color-field)]"
-                      : "text-[color:var(--color-ink-muted)] hover:text-[color:var(--color-ink)] hover:bg-[color:var(--color-field)]",
+                      ? "text-brand-orange bg-brand-orange/10"
+                      : "text-brand-muted hover:text-white hover:bg-white/5",
                     "disabled:opacity-40 disabled:cursor-not-allowed",
                   )}
                 >
@@ -214,8 +230,8 @@ export function ChatInterface({
                   className={clsx(
                     "p-1.5 rounded-md transition-colors cursor-pointer",
                     msg.feedback === 2
-                      ? "text-[color:var(--color-accent)] bg-[color:var(--color-field)]"
-                      : "text-[color:var(--color-ink-muted)] hover:text-[color:var(--color-ink)] hover:bg-[color:var(--color-field)]",
+                      ? "text-brand-orange bg-brand-orange/10"
+                      : "text-brand-muted hover:text-white hover:bg-white/5",
                     "disabled:opacity-40 disabled:cursor-not-allowed",
                   )}
                 >
@@ -229,14 +245,17 @@ export function ChatInterface({
         {/* Loading indicator */}
         {isLoading && (
           <div className="flex flex-col gap-2 items-start">
-            <div className="bg-[color:var(--color-field)] rounded-2xl rounded-bl-sm px-4 py-3 max-w-[85%]">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-brand-orange px-1">
+              SportRules AI
+            </p>
+            <div className="bg-brand-orange/10 border border-brand-orange/20 rounded-lg px-4 py-3 max-w-[90%]">
               <Progress.Root
                 value={null}
                 aria-label="Loading answer…"
-                className="w-32 h-1 bg-[color:var(--color-bg-dark)] rounded-full overflow-hidden"
+                className="w-32 h-1 bg-white/10 rounded-full overflow-hidden"
               >
                 <Progress.Track className="w-full h-full">
-                  <Progress.Indicator className="h-full w-1/2 bg-[color:var(--color-accent)] rounded-full animate-[indeterminate_1.4s_ease-in-out_infinite]" />
+                  <Progress.Indicator className="h-full w-1/2 bg-brand-orange rounded-full animate-[indeterminate_1.4s_ease-in-out_infinite]" />
                 </Progress.Track>
               </Progress.Root>
             </div>
@@ -247,7 +266,7 @@ export function ChatInterface({
         {error && (
           <div
             role="alert"
-            className="flex items-start gap-2 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm"
+            className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-sm"
           >
             <AlertCircleIcon size={16} className="flex-none mt-0.5" aria-hidden />
             <span className="flex-1">{error}</span>
@@ -258,7 +277,7 @@ export function ChatInterface({
                 if (lastUser) handleSubmit(lastUser.content);
               }}
               aria-label="Retry"
-              className="flex-none flex items-center gap-1 text-xs font-medium hover:underline cursor-pointer"
+              className="flex-none flex items-center gap-1 text-xs font-bold uppercase tracking-widest hover:text-red-200 cursor-pointer"
             >
               <RotateCcwIcon size={12} aria-hidden />
               Retry
@@ -270,10 +289,10 @@ export function ChatInterface({
       </div>
 
       {/* Divider */}
-      <div className="h-px bg-[color:var(--color-bg-dark)] mx-4" />
+      <div className="h-px bg-white/10" />
 
       {/* Input area */}
-      <div className="px-4 py-3">
+      <div className="px-5 py-4 bg-brand-black/40">
         <Field.Root className="flex gap-2 items-end">
           <Field.Label className="sr-only">Ask a question about NBA rules</Field.Label>
           <Field.Control
@@ -281,14 +300,14 @@ export function ChatInterface({
               <textarea
                 ref={textareaRef}
                 rows={2}
-                placeholder="e.g. What is a flagrant foul?"
+                placeholder="Ask a rule question: 'Penalty for double dribble?'"
                 onKeyDown={handleKeyDown}
                 onChange={(e) => setInput(e.target.value)}
                 className={clsx(
-                  "flex-1 resize-none rounded-xl border px-3 py-2.5 text-sm leading-relaxed",
-                  "bg-[color:var(--color-field)] text-[color:var(--color-ink)]",
-                  "border-[color:var(--color-bg-dark)] placeholder-[color:var(--color-ink-muted)]",
-                  "focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)]",
+                  "flex-1 resize-none rounded-lg border px-3 py-2.5 text-sm leading-relaxed",
+                  "bg-brand-light-gray text-white placeholder-brand-dim",
+                  "border-white/10",
+                  "focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:border-brand-orange",
                   "disabled:opacity-50 transition-colors",
                 )}
                 disabled={isLoading}
@@ -301,17 +320,17 @@ export function ChatInterface({
             disabled={!input.trim() || isLoading}
             aria-label="Send question"
             className={clsx(
-              "flex-none flex items-center justify-center w-10 h-10 rounded-xl transition-colors cursor-pointer",
-              "bg-[color:var(--color-accent)] text-white",
-              "hover:bg-[color:var(--color-accent-hover)]",
+              "flex-none flex items-center justify-center w-11 h-11 rounded-lg transition-colors cursor-pointer",
+              "bg-brand-orange text-white",
+              "hover:bg-brand-orange-hover",
               "disabled:opacity-40 disabled:cursor-not-allowed",
-              "focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)] focus-visible:ring-offset-2",
+              "focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black",
             )}
           >
             <SendHorizonalIcon size={16} aria-hidden />
           </Button>
         </Field.Root>
-        <p className="mt-1.5 text-[11px] text-[color:var(--color-ink-muted)]">
+        <p className="mt-2 text-[10px] uppercase tracking-widest text-brand-dim">
           Press Enter to send · Shift+Enter for new line
         </p>
       </div>
