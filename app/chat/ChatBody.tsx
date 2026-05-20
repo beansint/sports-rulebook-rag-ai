@@ -15,10 +15,18 @@ function ChatBodyInner() {
   const { sessionId, newSession } = useChatSession();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [restoredMessages, setRestoredMessages] = useState<null | { sessionId: string }>(null);
+  const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0);
 
-  const handleSelectSession = async (id: string) => {
+  const handleSelectSession = (id: string) => {
     setRestoredMessages({ sessionId: id });
     setSidebarOpen(false);
+    setSidebarRefreshKey((k) => k + 1);
+  };
+
+  const handleNewSession = () => {
+    newSession();
+    setRestoredMessages(null);
+    setSidebarRefreshKey((k) => k + 1);
   };
 
   return (
@@ -27,10 +35,8 @@ function ChatBodyInner() {
         {/* Sidebar */}
         <ChatHistorySidebar
           sessionId={restoredMessages?.sessionId ?? sessionId}
-          onNewSession={() => {
-            newSession();
-            setRestoredMessages(null);
-          }}
+          refreshKey={sidebarRefreshKey}
+          onNewSession={handleNewSession}
           onSelectSession={handleSelectSession}
           open={sidebarOpen}
           onToggle={() => setSidebarOpen((v) => !v)}
@@ -44,7 +50,7 @@ function ChatBodyInner() {
           <ChatInterface
             sport={sport}
             sessionId={restoredMessages?.sessionId ?? sessionId}
-            onNewSession={newSession}
+            onNewSession={handleNewSession}
             initialQuestion={initialQuestion}
           />
         </div>

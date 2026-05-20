@@ -14,6 +14,8 @@ interface Session {
 
 interface ChatHistorySidebarProps {
   sessionId: string;
+  /** Increment to trigger a history re-fetch (e.g. after new session starts or session selected) */
+  refreshKey: number;
   onNewSession: () => void;
   onSelectSession: (id: string) => void;
   open: boolean;
@@ -49,6 +51,7 @@ function groupSessions(sessions: Session[]) {
 
 export function ChatHistorySidebar({
   sessionId,
+  refreshKey,
   onNewSession,
   onSelectSession,
   open,
@@ -63,7 +66,7 @@ export function ChatHistorySidebar({
       .then((data) => setSessions(data.sessions ?? []))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [sessionId]);
+  }, [refreshKey]);
 
   const groups = groupSessions(sessions);
 
