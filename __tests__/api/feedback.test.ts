@@ -18,7 +18,24 @@ vi.mock("@/lib/supabase/server", () => ({
 
 vi.mock("@/lib/supabase", () => ({
   getSupabaseAdmin: vi.fn().mockReturnValue({
-    from: vi.fn().mockReturnValue({ upsert: mockUpsert }),
+    from: vi.fn().mockImplementation((table: string) => {
+      if (table === "queries") {
+        // ownership check: select().eq().eq().maybeSingle() — owned by default
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: { id: "550e8400-e29b-41d4-a716-446655440000" },
+                }),
+              }),
+            }),
+          }),
+        };
+      }
+      // feedback table
+      return { upsert: mockUpsert };
+    }),
   }),
 }));
 
