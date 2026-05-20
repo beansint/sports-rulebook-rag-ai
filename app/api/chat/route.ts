@@ -40,6 +40,17 @@ export async function POST(request: Request) {
     const latencyMs = Date.now() - startedAt;
 
     if (input.session_id) {
+      // Verify the session belongs to this user before mutating
+      const { data: existingSession } = await supabase
+        .from("chat_sessions")
+        .select("user_id")
+        .eq("id", input.session_id)
+        .maybeSingle();
+
+      if (existingSession && existingSession.user_id !== user.id) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+
       await supabase.from("chat_sessions").upsert({
         id: input.session_id,
         user_id: user.id,
