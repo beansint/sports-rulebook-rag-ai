@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { LoginForm } from "./LoginForm";
@@ -18,43 +19,54 @@ export default async function LoginPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="min-h-dvh flex">
-      {/* ── Left panel (brand) — hidden on mobile ── */}
-      <div className="hidden lg:flex lg:w-1/2 xl:w-[55%] relative bg-brand-gray flex-col justify-between p-12 overflow-hidden">
-        {/* Grid pattern overlay */}
-        <div
-          aria-hidden
-          className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,107,0,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,107,0,1) 1px, transparent 1px)",
-            backgroundSize: "48px 48px",
-          }}
-        />
+    <div className="relative min-h-dvh flex overflow-hidden bg-brand-black">
 
-        {/* Orange glow blob */}
-        <div
-          aria-hidden
-          className="absolute -bottom-32 -left-32 w-[500px] h-[500px] rounded-full opacity-[0.07]"
-          style={{
-            background: "radial-gradient(circle, #ff6b00 0%, transparent 70%)",
-          }}
-        />
+      {/* ── Background texture layers ── */}
+      {/* Orange grid */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,107,0,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(255,107,0,0.12) 1px, transparent 1px)",
+          backgroundSize: "56px 56px",
+        }}
+      />
+      {/* Glow blob — top right */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full"
+        style={{ background: "radial-gradient(circle, rgba(255,107,0,0.18) 0%, transparent 65%)" }}
+      />
+      {/* Glow blob — bottom left */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-48 -left-48 w-[500px] h-[500px] rounded-full"
+        style={{ background: "radial-gradient(circle, rgba(255,107,0,0.10) 0%, transparent 65%)" }}
+      />
 
-        {/* Top logo */}
-        <div className="relative flex items-center gap-3">
-          <span className="w-9 h-9 bg-brand-orange rounded-sm flex items-center justify-center font-heading text-xl text-white leading-none shrink-0">
-            S
-          </span>
-          <span className="font-heading text-2xl tracking-wider uppercase text-white">
-            SportRules AI
-          </span>
-        </div>
+      {/* ── Back to home — always visible ── */}
+      <Link
+        href="/"
+        className="absolute top-6 left-6 z-20 flex items-center gap-1.5 text-brand-muted hover:text-white transition-colors duration-150 text-sm font-medium group"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-0.5 transition-transform duration-150" aria-hidden>
+          <path d="M19 12H5M12 5l-7 7 7 7" />
+        </svg>
+        Back to home
+      </Link>
 
-        {/* Center hero copy */}
-        <div className="relative space-y-6">
-          <div className="space-y-3">
-            <p className="text-brand-orange text-sm font-bold uppercase tracking-widest">
+      {/* ── Left panel (brand) — lg+ only ── */}
+      <div className="hidden lg:flex lg:w-[52%] relative flex-col justify-between p-14 border-r border-white/5">
+        {/* Glassy panel tint */}
+        <div className="absolute inset-0 bg-brand-gray/40 backdrop-blur-sm" aria-hidden />
+
+        <div className="relative" />
+
+        {/* Center copy */}
+        <div className="relative space-y-7">
+          <div className="space-y-4">
+            <p className="text-brand-orange text-xs font-bold uppercase tracking-[0.2em]">
               Official rulebook intelligence
             </p>
             <h2 className="font-heading text-5xl xl:text-6xl uppercase leading-none text-white">
@@ -62,14 +74,13 @@ export default async function LoginPage({ searchParams }: Props) {
               <br />
               <span className="text-brand-orange">Instant</span> answer.
             </h2>
-            <p className="text-brand-muted text-lg max-w-sm leading-relaxed">
-              Natural-language Q&A grounded in official sports rulebooks, with
-              exact citations and page references.
+            <p className="text-brand-muted text-base max-w-xs leading-relaxed">
+              Natural-language Q&amp;A grounded in official sports rulebooks — every answer cites the exact page.
             </p>
           </div>
 
           {/* Stat callouts */}
-          <div className="flex gap-6 pt-2">
+          <div className="flex gap-8 pt-1">
             {[
               { value: "4+", label: "Sports" },
               { value: "≥0.85", label: "Relevance" },
@@ -77,47 +88,48 @@ export default async function LoginPage({ searchParams }: Props) {
             ].map(({ value, label }) => (
               <div key={label} className="border-l-2 border-brand-orange pl-3">
                 <div className="text-white font-heading text-2xl">{value}</div>
-                <div className="text-brand-muted text-xs uppercase tracking-widest">
-                  {label}
-                </div>
+                <div className="text-brand-muted text-xs uppercase tracking-widest">{label}</div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Bottom note */}
-        <p className="relative text-brand-dim text-xs">
-          © {new Date().getFullYear()} SportRules AI · Access by invitation only
-        </p>
-      </div>
-
-      {/* ── Right panel (form) ── */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 bg-brand-black">
-        {/* Mobile logo */}
-        <div className="flex lg:hidden items-center gap-2 mb-10">
-          <span className="w-8 h-8 bg-brand-orange rounded-sm flex items-center justify-center font-heading text-xl text-white leading-none">
+        {/* Bottom logo */}
+        <div className="relative flex items-center gap-2.5">
+          <span className="w-8 h-8 bg-brand-orange rounded-sm flex items-center justify-center font-heading text-lg text-white leading-none shrink-0">
             S
           </span>
           <span className="font-heading text-xl tracking-wider uppercase text-white">
             SportRules AI
           </span>
         </div>
+      </div>
 
-        <div className="w-full max-w-sm">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-1">Welcome back</h1>
-            <p className="text-brand-muted text-sm">
-              Sign in to access the rulebook.
-            </p>
+      {/* ── Right panel (form) ── */}
+      <div className="relative flex-1 flex flex-col items-center justify-center px-6 py-20">
+        {/* Glassy form card */}
+        <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-8 py-10 shadow-2xl">
+
+          {/* Mobile logo */}
+          <div className="flex lg:hidden items-center gap-2 mb-8">
+            <span className="w-7 h-7 bg-brand-orange rounded-sm flex items-center justify-center font-heading text-base text-white leading-none">
+              S
+            </span>
+            <span className="font-heading text-lg tracking-wider uppercase text-white">
+              SportRules AI
+            </span>
+          </div>
+
+          <div className="mb-7">
+            <h1 className="text-2xl font-bold text-white mb-1">Welcome back</h1>
+            <p className="text-brand-muted text-sm">Sign in to access the rulebook.</p>
           </div>
 
           <LoginForm />
 
-          <p className="mt-8 text-center text-brand-dim text-xs">
+          <p className="mt-7 text-center text-brand-dim text-xs leading-relaxed">
             Access is by invitation only.{" "}
-            <span className="text-brand-muted">
-              Contact an admin to request access.
-            </span>
+            <span className="text-brand-muted">Contact an admin to request access.</span>
           </p>
         </div>
       </div>
