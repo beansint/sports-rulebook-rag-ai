@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { CreateUserForm } from "./CreateUserForm";
@@ -14,6 +15,10 @@ export default async function AdminUsersPage() {
     supabase.auth.admin.listUsers(),
     serverClient.auth.getUser(),
   ]);
+
+  if (!currentUser || currentUser.email !== process.env.ADMIN_EMAIL) {
+    redirect("/login");
+  }
 
   const users = usersData?.users ?? [];
 

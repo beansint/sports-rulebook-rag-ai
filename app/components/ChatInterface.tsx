@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@base-ui/react/button";
 import { Field } from "@base-ui/react/field";
-import { Progress } from "@base-ui/react/progress";
 import {
   SendHorizonalIcon,
   ThumbsUpIcon,
@@ -14,6 +13,9 @@ import {
 import clsx from "clsx";
 import type { CitationPayload } from "@/types/rag";
 import { CitationCard } from "./CitationCard";
+import { SuggestionChips } from "./SuggestionChips";
+import { TypingIndicator } from "./TypingIndicator";
+import type { Sport } from "@/app/hooks/useSportSelection";
 
 interface Message {
   id: string;
@@ -25,26 +27,49 @@ interface Message {
 }
 
 interface ChatInterfaceProps {
-  sport?: string;
-  /** When provided, the input is seeded with this question and auto-submitted once on mount. */
+  sport: Sport;
+  sessionId: string;
+  onNewSession: () => void;
   initialQuestion?: string;
 }
 
+const SPORT_LABELS: Record<Sport, string> = {
+  nba: "NBA",
+  nfl: "NFL",
+  mlb: "MLB",
+  fifa: "FIFA",
+};
+
 export function ChatInterface({
-  sport = "nba",
+  sport,
+  sessionId,
+  onNewSession,
   initialQuestion,
 }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [expandedCitations, setExpandedCitations] = useState<Set<string>>(new Set());
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const autoSubmittedRef = useRef(false);
+  const prevSportRef = useRef<Sport>(sport);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // Clear messages when sport changes
+  useEffect(() => {
+    if (prevSportRef.current !== sport) {
+      prevSportRef.current = sport;
+      setMessages([]);
+      setError(null);
+      setExpandedCitations(new Set());
+      onNewSession();
+    }
+  }, [sport, onNewSession]);
 
   const handleSubmit = async (questionOverride?: string) => {
     const question = (questionOverride ?? input).trim();
@@ -67,7 +92,7 @@ export function ChatInterface({
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, sport }),
+        body: JSON.stringify({ question, sport, session_id: sessionId }),
       });
 
       if (!res.ok) {
@@ -96,7 +121,7 @@ export function ChatInterface({
     }
   };
 
-  // Auto-submit when initialQuestion is provided (e.g. arriving from /chat?q=...)
+  // Auto-submit initial question (e.g. /chat?q=...)
   useEffect(() => {
     if (initialQuestion && !autoSubmittedRef.current) {
       autoSubmittedRef.current = true;
@@ -105,11 +130,7 @@ export function ChatInterface({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialQuestion]);
 
-  const handleFeedback = async (
-    msgId: string,
-    queryId: string,
-    rating: 1 | 2,
-  ) => {
+  const handleFeedback = async (msgId: string, queryId: string, rating: 1 | 2) => {
     setMessages((prev) =>
       prev.map((m) => (m.id === msgId ? { ...m, feedback: rating } : m)),
     );
@@ -124,12 +145,22 @@ export function ChatInterface({
     }
   };
 
+  const toggleCitation = (key: string) => {
+    setExpandedCitations((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
     }
   };
+
+  const sportLabel = SPORT_LABELS[sport];
 
   return (
     <div className="flex flex-col h-full bg-brand-gray border border-white/10 rounded-xl overflow-hidden">
@@ -140,18 +171,16 @@ export function ChatInterface({
         aria-label="Conversation"
       >
         {messages.length === 0 && !isLoading && (
-          <div className="flex flex-col items-center justify-center h-full py-12 text-center">
+          <div className="flex flex-col items-center justify-center h-full py-8 text-center">
             <div className="w-12 h-12 rounded-sm bg-brand-orange flex items-center justify-center mb-4">
-              <span
-                className="text-xl font-heading text-white leading-none"
-                aria-hidden
-              >
+              <span className="text-xl font-heading text-white leading-none" aria-hidden>
                 S
               </span>
             </div>
             <p className="text-brand-muted text-sm">
-              Ask a question about NBA rules below
+              Ask a question about {sportLabel} rules below
             </p>
+            <SuggestionChips sport={sport} onSelect={handleSubmit} />
           </div>
         )}
 
@@ -163,7 +192,6 @@ export function ChatInterface({
               "items-start": msg.role === "assistant",
             })}
           >
-            {/* Bubble label */}
             <p
               className={clsx(
                 "text-[10px] font-bold uppercase tracking-widest px-1",
@@ -176,7 +204,6 @@ export function ChatInterface({
               {msg.role === "assistant" ? "SportRules AI" : "You"}
             </p>
 
-            {/* Bubble */}
             <div
               className={clsx("rounded-lg px-4 py-3 max-w-[90%] text-sm leading-relaxed", {
                 "bg-brand-orange text-white": msg.role === "user",
@@ -186,24 +213,28 @@ export function ChatInterface({
               {msg.content}
             </div>
 
-            {/* Citations */}
             {msg.role === "assistant" && msg.citations && msg.citations.length > 0 && (
               <div className="w-full max-w-[90%] space-y-1.5">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-brand-muted px-1">
                   Sources
                 </p>
-                {msg.citations.map((cit, i) => (
-                  <CitationCard key={cit.chunkId} citation={cit} index={i} />
-                ))}
+                {msg.citations.map((cit, i) => {
+                  const key = `${msg.id}-${i}`;
+                  return (
+                    <CitationCard
+                      key={cit.chunkId}
+                      citation={cit}
+                      index={i}
+                      expanded={expandedCitations.has(key)}
+                      onToggle={() => toggleCitation(key)}
+                    />
+                  );
+                })}
               </div>
             )}
 
-            {/* Feedback buttons */}
             {msg.role === "assistant" && msg.queryId && (
-              <div
-                className="flex gap-1 items-center"
-                aria-label="Rate this answer"
-              >
+              <div className="flex gap-1 items-center" aria-label="Rate this answer">
                 <span className="text-[10px] uppercase tracking-widest text-brand-muted mr-1">
                   Helpful?
                 </span>
@@ -242,27 +273,17 @@ export function ChatInterface({
           </div>
         ))}
 
-        {/* Loading indicator */}
         {isLoading && (
           <div className="flex flex-col gap-2 items-start">
             <p className="text-[10px] font-bold uppercase tracking-widest text-brand-orange px-1">
               SportRules AI
             </p>
-            <div className="bg-brand-orange/10 border border-brand-orange/20 rounded-lg px-4 py-3 max-w-[90%]">
-              <Progress.Root
-                value={null}
-                aria-label="Loading answer…"
-                className="w-32 h-1 bg-white/10 rounded-full overflow-hidden"
-              >
-                <Progress.Track className="w-full h-full">
-                  <Progress.Indicator className="h-full w-1/2 bg-brand-orange rounded-full animate-[indeterminate_1.4s_ease-in-out_infinite]" />
-                </Progress.Track>
-              </Progress.Root>
+            <div className="bg-brand-orange/10 border border-brand-orange/20 rounded-lg max-w-[90%]">
+              <TypingIndicator />
             </div>
           </div>
         )}
 
-        {/* Error */}
         {error && (
           <div
             role="alert"
@@ -288,21 +309,23 @@ export function ChatInterface({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Divider */}
       <div className="h-px bg-white/10" />
 
       {/* Input area */}
       <div className="px-5 py-4 bg-brand-black/40">
         <Field.Root className="flex gap-2 items-end">
-          <Field.Label className="sr-only">Ask a question about NBA rules</Field.Label>
+          <Field.Label className="sr-only">
+            Ask a {sportLabel} rule question
+          </Field.Label>
           <Field.Control
             render={
               <textarea
                 ref={textareaRef}
                 rows={2}
-                placeholder="Ask a rule question: 'Penalty for double dribble?'"
+                placeholder={`Ask a ${sportLabel} rule question…`}
                 onKeyDown={handleKeyDown}
                 onChange={(e) => setInput(e.target.value)}
+                aria-label={`Ask a ${sportLabel} rule question`}
                 className={clsx(
                   "flex-1 resize-none rounded-lg border px-3 py-2.5 text-sm leading-relaxed",
                   "bg-brand-light-gray text-white placeholder-brand-dim",
