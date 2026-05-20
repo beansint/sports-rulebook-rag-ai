@@ -1,33 +1,54 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ChatInterface } from "../components/ChatInterface";
-import { SportBadge } from "../components/SportBadge";
+import { SportSelector } from "../components/SportSelector";
+import { ChatHistorySidebar } from "../components/ChatHistorySidebar";
+import { useSportSelection } from "../hooks/useSportSelection";
+import { useChatSession } from "../hooks/useChatSession";
 
 function ChatBodyInner() {
   const params = useSearchParams();
   const initialQuestion = params.get("q") ?? undefined;
+  const { sport, setSport } = useSportSelection();
+  const { sessionId, newSession } = useChatSession();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [restoredMessages, setRestoredMessages] = useState<null | { sessionId: string }>(null);
+
+  const handleSelectSession = async (id: string) => {
+    setRestoredMessages({ sessionId: id });
+    setSidebarOpen(false);
+  };
 
   return (
-    <div className="max-w-4xl mx-auto px-6 pt-32 pb-20">
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-4">
-          <SportBadge sport="nba" />
-          <span className="text-xs uppercase tracking-widest text-brand-muted">
-            2024–25 Rulebook
-          </span>
-        </div>
-        <h1 className="font-heading text-5xl md:text-6xl tracking-tight text-white mb-3">
-          ASK THE RULEBOOK
-        </h1>
-        <p className="text-brand-muted max-w-xl">
-          Natural-language Q&amp;A grounded in the official NBA rulebook. Every
-          answer includes the exact rule text and page reference.
-        </p>
-      </div>
+    <div className="max-w-6xl mx-auto px-4 pt-28 pb-20">
+      <div className="flex gap-4">
+        {/* Sidebar */}
+        <ChatHistorySidebar
+          sessionId={restoredMessages?.sessionId ?? sessionId}
+          onNewSession={() => {
+            newSession();
+            setRestoredMessages(null);
+          }}
+          onSelectSession={handleSelectSession}
+          open={sidebarOpen}
+          onToggle={() => setSidebarOpen((v) => !v)}
+        />
 
-      <ChatInterface sport="nba" initialQuestion={initialQuestion} />
+        {/* Main column */}
+        <div className="flex-1 min-w-0">
+          <div className="mb-4">
+            <SportSelector sport={sport} onSelect={setSport} />
+          </div>
+          <ChatInterface
+            sport={sport}
+            sessionId={restoredMessages?.sessionId ?? sessionId}
+            onNewSession={newSession}
+            initialQuestion={initialQuestion}
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -36,7 +57,7 @@ export function ChatBody() {
   return (
     <Suspense
       fallback={
-        <div className="max-w-4xl mx-auto px-6 pt-32 pb-20 text-brand-muted">
+        <div className="max-w-6xl mx-auto px-4 pt-28 pb-20 text-brand-muted">
           Loading…
         </div>
       }
