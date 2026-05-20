@@ -7,6 +7,7 @@ import { generateAnswer } from "@/lib/generation";
 import { selectModel } from "@/lib/models";
 import { retrieveChunks, toCitationPayload } from "@/lib/rag";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { getSupabaseServer } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -15,12 +16,19 @@ const chatSchema = z.object({
   question: z.string().min(1).max(1200),
   sport: z.string().min(2).max(32).default("nba").transform((value) => value.toLowerCase()),
   modelId: z.string().min(1).max(120).optional(),
+  session_id: z.string().uuid().optional(),
 });
 
 export async function POST(request: Request) {
   const startedAt = Date.now();
 
   try {
+    const serverClient = await getSupabaseServer();
+    const { data: { user } } = await serverClient.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const input = chatSchema.parse(await request.json());
     const supabase = getSupabaseAdmin();
     const admin = isAdminRequest(request);
@@ -31,10 +39,33 @@ export async function POST(request: Request) {
     const generated = await generateAnswer(input.question, chunks, model);
     const latencyMs = Date.now() - startedAt;
 
+    if (input.session_id) {
+      // Verify the session belongs to this user before mutating
+      const { data: existingSession } = await supabase
+        .from("chat_sessions")
+        .select("user_id")
+        .eq("id", input.session_id)
+        .maybeSingle();
+
+      if (existingSession && existingSession.user_id !== user.id) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+
+      await supabase.from("chat_sessions").upsert({
+        id: input.session_id,
+        user_id: user.id,
+        sport: input.sport,
+        title: input.question.slice(0, 120),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "id" });
+    }
+
     const { data: query, error: queryError } = await supabase
       .from("queries")
       .insert({
+        user_id: user.id,
         sport: input.sport,
+        session_id: input.session_id ?? null,
         question: input.question,
         answer: generated.answer,
         latency_ms: latencyMs,

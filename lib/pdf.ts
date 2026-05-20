@@ -1,4 +1,6 @@
-import pdfParse from "pdf-parse";
+// pdf-parse is CJS-only; require() avoids Turbopack's default-export mis-resolution
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pdfParse = require("pdf-parse") as (buf: Buffer, opts?: object) => Promise<{ text: string }>;
 import { normalizeWhitespace } from "./text";
 
 type PdfTextItem = {

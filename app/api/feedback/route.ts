@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { errorResponse, HttpError } from "@/lib/errors";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { getSupabaseServer } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -13,6 +14,12 @@ const feedbackSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    const serverClient = await getSupabaseServer();
+    const { data: { user } } = await serverClient.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const input = feedbackSchema.parse(await request.json());
     const supabase = getSupabaseAdmin();
 

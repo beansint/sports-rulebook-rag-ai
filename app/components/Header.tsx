@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { getSupabaseServer } from "@/lib/supabase/server";
+import { signOut } from "@/app/login/actions";
 
 const NAV_LINKS = [
   { href: "/#dashboard", label: "Platform" },
@@ -7,7 +9,12 @@ const NAV_LINKS = [
   { href: "/#cta", label: "Pricing" },
 ];
 
-export function Header() {
+export async function Header() {
+  const supabase = await getSupabaseServer();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const isAdmin = user?.email === process.env.ADMIN_EMAIL;
+
   return (
     <header className="fixed top-0 w-full z-50 bg-brand-black/80 backdrop-blur-md border-b border-white/10">
       <nav
@@ -41,12 +48,47 @@ export function Header() {
           ))}
         </div>
 
-        <Link
-          href="/chat"
-          className="bg-white text-brand-black px-6 py-2 font-bold text-sm uppercase tracking-widest hover:bg-brand-orange hover:text-white transition-all rounded-sm"
-        >
-          Try It Free
-        </Link>
+        {user ? (
+          <div className="flex items-center gap-3">
+            {isAdmin && (
+              <Link
+                href="/admin/users"
+                className="hidden sm:block text-xs font-bold uppercase tracking-widest text-brand-orange hover:text-brand-orange/70 transition-colors"
+              >
+                Admin
+              </Link>
+            )}
+            <div
+              className="flex items-center gap-2 px-3 py-1.5 rounded-sm border border-white/10 bg-white/5"
+              title={user.email ?? ""}
+            >
+              <span
+                className="w-6 h-6 rounded-full bg-brand-orange flex items-center justify-center text-xs font-bold text-white shrink-0"
+                aria-hidden
+              >
+                {(user.email ?? "?")[0].toUpperCase()}
+              </span>
+              <span className="hidden sm:block text-xs text-white/60 max-w-40 truncate">
+                {user.email}
+              </span>
+            </div>
+            <form action={signOut}>
+              <button
+                type="submit"
+                className="text-xs font-bold uppercase tracking-widest text-white/50 hover:text-white transition-colors cursor-pointer min-h-[44px] px-1"
+              >
+                Sign&nbsp;out
+              </button>
+            </form>
+          </div>
+        ) : (
+          <Link
+            href="/chat"
+            className="bg-white text-brand-black px-6 py-2 font-bold text-sm uppercase tracking-widest hover:bg-brand-orange hover:text-white transition-all rounded-sm"
+          >
+            Try It Free
+          </Link>
+        )}
       </nav>
     </header>
   );
