@@ -17,6 +17,13 @@ export async function GET(
     }
 
     const { sessionId } = await params;
+
+    const UUID_RE =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!UUID_RE.test(sessionId)) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
     const supabase = getSupabaseAdmin();
 
     const { data: session } = await supabase
