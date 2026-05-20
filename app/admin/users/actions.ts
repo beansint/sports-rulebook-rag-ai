@@ -1,9 +1,21 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { getSupabaseServer } from "@/lib/supabase/server";
+
+async function requireAdmin() {
+  const serverClient = await getSupabaseServer();
+  const { data: { user } } = await serverClient.auth.getUser();
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    redirect("/login");
+  }
+}
 
 export async function createUser(formData: FormData) {
+  await requireAdmin();
+
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
@@ -22,6 +34,8 @@ export async function createUser(formData: FormData) {
 }
 
 export async function deleteUser(userId: string) {
+  await requireAdmin();
+
   if (!userId) throw new Error("User ID is required.");
 
   const supabase = getSupabaseAdmin();
