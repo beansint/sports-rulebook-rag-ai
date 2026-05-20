@@ -23,6 +23,18 @@ export async function POST(request: Request) {
     const input = feedbackSchema.parse(await request.json());
     const supabase = getSupabaseAdmin();
 
+    // Ownership check — service role bypasses RLS so we enforce it explicitly
+    const { data: ownedQuery } = await supabase
+      .from("queries")
+      .select("id")
+      .eq("id", input.queryId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (!ownedQuery) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
     const { error } = await supabase.from("feedback").upsert(
       {
         query_id: input.queryId,
