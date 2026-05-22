@@ -1,5 +1,5 @@
 import { getEmbeddingModel } from "./env";
-import { getOpenAIClient } from "./openai";
+import { getEmbeddingClient } from "./openai";
 
 export type EmbeddingBatchResult = {
   embeddings: number[][];
@@ -9,7 +9,7 @@ export type EmbeddingBatchResult = {
 const EMBEDDING_BATCH_SIZE = 64;
 
 export async function embedTexts(texts: string[]): Promise<EmbeddingBatchResult> {
-  const openai = getOpenAIClient();
+  const openai = getEmbeddingClient();
   const model = getEmbeddingModel();
   const embeddings: number[][] = [];
   let totalTokens = 0;
