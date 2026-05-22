@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { triggerIngest } from "./actions";
@@ -46,12 +46,14 @@ function IngestRow({
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [rowError, setRowError] = useState<string | null>(null);
 
   const handleIngest = () => {
+    setRowError(null);
     startTransition(async () => {
       const result: IngestResult = await triggerIngest(entry);
       if (!result.ok) {
-        console.error("Ingest failed:", result.error);
+        setRowError(result.error ?? "Unknown error");
       }
       router.refresh();
     });
@@ -81,6 +83,11 @@ function IngestRow({
           ) : null}
           {isPending ? "Ingesting…" : run?.status === "succeeded" ? "Re-ingest" : "Ingest"}
         </button>
+        {rowError ? (
+          <p style={{ margin: "0.3rem 0 0", fontSize: "0.75rem", color: "#ef4444" }} title={rowError}>
+            {rowError.length > 60 ? rowError.slice(0, 57) + "…" : rowError}
+          </p>
+        ) : null}
       </td>
     </tr>
   );
