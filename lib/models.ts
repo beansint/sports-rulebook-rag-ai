@@ -32,8 +32,30 @@ export async function getEnabledModel(supabase: SupabaseClient, modelId: string)
 }
 
 export async function selectModel(supabase: SupabaseClient, requestedModelId: string | undefined, isAdmin: boolean) {
-  const modelId = isAdmin && requestedModelId ? requestedModelId : await getDefaultModelId(supabase);
+  // All authenticated users can pick any enabled model; admins can also request disabled ones
+  if (isAdmin && requestedModelId) {
+    const { data, error } = await supabase
+      .from("models")
+      .select("id, provider, display_name, enabled, input_rate_per_m, output_rate_per_m, context_window")
+      .eq("id", requestedModelId)
+      .maybeSingle<ModelConfig>();
+    if (error) throw new HttpError(500, "Failed to load model", error.message);
+    if (!data) throw new HttpError(400, `Model does not exist: ${requestedModelId}`);
+    return data;
+  }
+  const modelId = requestedModelId ?? await getDefaultModelId(supabase);
   return getEnabledModel(supabase, modelId);
+}
+
+export async function listEnabledModels(supabase: SupabaseClient) {
+  const { data, error } = await supabase
+    .from("models")
+    .select("id, display_name, provider")
+    .eq("enabled", true)
+    .order("display_name", { ascending: true });
+
+  if (error) throw new HttpError(500, "Failed to list models", error.message);
+  return data ?? [];
 }
 
 export async function listModels(supabase: SupabaseClient) {
