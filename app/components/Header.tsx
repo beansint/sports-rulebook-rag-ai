@@ -58,6 +58,12 @@ export async function Header() {
                 Admin
               </Link>
             )}
+            <Link
+              href="/chat"
+              className="bg-brand-orange text-white px-4 py-2 text-xs font-bold uppercase tracking-widest hover:bg-brand-orange-hover transition-colors rounded-sm"
+            >
+              Open Chat
+            </Link>
             <div
               className="flex items-center gap-2 px-3 py-1.5 rounded-sm border border-white/10 bg-white/5"
               title={user.email ?? ""}
