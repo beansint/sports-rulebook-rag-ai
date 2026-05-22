@@ -1,0 +1,34 @@
+[
+  {
+    "sport": "nba",
+    "season": "2025-26",
+    "title": "Official 2025-26 NBA Playing Rules",
+    "sourceUrl": "https://ak-static.cms.nba.com/wp-content/uploads/sites/4/2025/10/Official-2025-26-NBA-Playing-Rules.pdf",
+    "storagePath": "raw/sport/nba/2025-26/nba-official-playing-rules-2025-26.pdf",
+    "pages": 76
+  },
+  {
+    "sport": "nfl",
+    "season": "2025",
+    "title": "2025 Official Playing Rules of the National Football League",
+    "sourceUrl": "https://operations.nfl.com/media/e4sneelu/2025-nfl-rulebook-final.pdf",
+    "storagePath": "raw/sport/nfl/2025/nfl-official-playing-rules-2025.pdf",
+    "pages": 92
+  },
+  {
+    "sport": "mlb",
+    "season": "2026",
+    "title": "Official Baseball Rules 2026 Edition",
+    "sourceUrl": "https://mktg.mlbstatic.com/mlb/official-information/2026-official-baseball-rules.pdf",
+    "storagePath": "raw/sport/mlb/2026/mlb-official-baseball-rules-2026.pdf",
+    "pages": 192
+  },
+  {
+    "sport": "fifa",
+    "season": "2025-26",
+    "title": "Laws of the Game 2025/26",
+    "sourceUrl": "https://downloads.theifab.com/downloads/laws-of-the-game-2025-26-double-pages?l=en",
+    "storagePath": "raw/sport/fifa/2025-26/fifa-ifab-laws-of-the-game-2025-26.pdf",
+    "pages": 116
+  }
+]
