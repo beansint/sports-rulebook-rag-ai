@@ -239,22 +239,24 @@ export function ChatInterface({
             </div>
 
             {msg.role === "assistant" && msg.citations && msg.citations.length > 0 && (
-              <div className="w-full max-w-[90%] space-y-1.5">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-brand-muted px-1">
+              <div className="w-full max-w-[90%]">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-brand-muted px-0.5 mb-1.5">
                   Sources
                 </p>
-                {msg.citations.map((cit, i) => {
-                  const key = `${msg.id}-${i}`;
-                  return (
-                    <CitationCard
-                      key={cit.chunkId}
-                      citation={cit}
-                      index={i}
-                      expanded={expandedCitations.has(key)}
-                      onToggle={() => toggleCitation(key)}
-                    />
-                  );
-                })}
+                <div className="flex flex-wrap gap-1.5">
+                  {msg.citations.map((cit, i) => {
+                    const key = `${msg.id}-${i}`;
+                    return (
+                      <CitationCard
+                        key={cit.chunkId}
+                        citation={cit}
+                        index={i}
+                        expanded={expandedCitations.has(key)}
+                        onToggle={() => toggleCitation(key)}
+                      />
+                    );
+                  })}
+                </div>
               </div>
             )}
 
