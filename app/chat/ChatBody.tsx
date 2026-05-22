@@ -59,6 +59,7 @@ function ChatBodyInner() {
             sport={sport}
             modelId={selectedModelId}
             sessionId={restoredMessages?.sessionId ?? sessionId}
+            restoreSessionId={restoredMessages?.sessionId}
             onNewSession={handleNewSession}
             onMessageSent={() => setSidebarRefreshKey((k) => k + 1)}
             initialQuestion={initialQuestion}

@@ -30,6 +30,7 @@ interface ChatInterfaceProps {
   sport: Sport;
   modelId: string | null;
   sessionId: string;
+  restoreSessionId?: string;
   onNewSession: () => void;
   onMessageSent?: () => void;
   initialQuestion?: string;
@@ -46,6 +47,7 @@ export function ChatInterface({
   sport,
   modelId,
   sessionId,
+  restoreSessionId,
   onNewSession,
   onMessageSent,
   initialQuestion,
@@ -63,6 +65,24 @@ export function ChatInterface({
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // Load messages when a past session is selected from the sidebar
+  useEffect(() => {
+    if (!restoreSessionId) return;
+    setMessages([]);
+    setError(null);
+    fetch(`/api/chat/sessions/${restoreSessionId}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then(({ messages: loaded }: { messages: { id: string; question: string; answer: string; citations: CitationPayload[] }[] }) => {
+        const restored: Message[] = loaded.flatMap((m) => [
+          { id: `${m.id}-q`, role: "user" as const, content: m.question },
+          { id: m.id, role: "assistant" as const, content: m.answer, citations: m.citations ?? [], queryId: m.id, feedback: null },
+        ]);
+        setMessages(restored);
+        setTimeout(scrollToBottom, 50);
+      })
+      .catch(() => {});
+  }, [restoreSessionId]);
 
   // Clear messages when sport changes
   useEffect(() => {
