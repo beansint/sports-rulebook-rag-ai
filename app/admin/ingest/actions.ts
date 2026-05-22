@@ -8,6 +8,14 @@ import { extractPdfPages } from "@/lib/pdf";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
+const ALLOWED_PDF_ORIGINS = [
+  "https://ak-static.cms.nba.com",
+  "https://operations.nfl.com",
+  "https://mktg.mlbstatic.com",
+  "https://img.mlbstatic.com",
+  "https://downloads.theifab.com",
+];
+
 export type ManifestEntry = {
   sport: string;
   season: string;
@@ -37,7 +45,8 @@ export async function getIngestStatuses(): Promise<Record<string, RunStatus>> {
   const { data } = await supabase
     .from("ingestion_runs")
     .select("sport, season, status, chunks_created, pages_processed, completed_at, error_message")
-    .order("started_at", { ascending: false });
+    .order("started_at", { ascending: false })
+    .limit(50);
 
   const result: Record<string, RunStatus> = {};
   for (const row of data ?? []) {
@@ -60,6 +69,11 @@ export async function triggerIngest(entry: ManifestEntry): Promise<IngestResult>
   const { data: { user } } = await serverClient.auth.getUser();
   if (!user || user.email !== process.env.ADMIN_EMAIL) {
     return { ok: false, error: "Unauthorized" };
+  }
+
+  const origin = new URL(entry.sourceUrl).origin;
+  if (!ALLOWED_PDF_ORIGINS.includes(origin)) {
+    return { ok: false, error: `Source URL origin '${origin}' is not in the allowed list` };
   }
 
   const supabase = getSupabaseAdmin();
