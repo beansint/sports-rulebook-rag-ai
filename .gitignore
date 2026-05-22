@@ -8,6 +8,8 @@ coverage/
 .nyc_output/
 playwright-report/
 test-results/
+.playwright-mcp/
+videos/
 tsconfig.tsbuildinfo
 
 # Production build
