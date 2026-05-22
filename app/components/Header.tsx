@@ -52,7 +52,7 @@ export async function Header() {
           <div className="flex items-center gap-3">
             {isAdmin && (
               <Link
-                href="/admin/users"
+                href="/admin/ingest"
                 className="hidden sm:block text-xs font-bold uppercase tracking-widest text-brand-orange hover:text-brand-orange/70 transition-colors"
               >
                 Admin

@@ -35,7 +35,10 @@ export default async function AdminUsersPage() {
     <div className="admin-shell">
       <div className="admin-header">
         <h1 className="admin-title">User Management</h1>
-        <Link href="/chat" className="admin-back">← Back to chat</Link>
+        <div style={{ display: "flex", gap: "1.5rem" }}>
+          <Link href="/admin/ingest" className="admin-back">Ingest</Link>
+          <Link href="/chat" className="admin-back">← Chat</Link>
+        </div>
       </div>
 
       <div className="admin-section">
