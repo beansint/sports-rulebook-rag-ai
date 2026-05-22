@@ -47,8 +47,8 @@ User question (string)
         │
         ▼
   embedText()                     ← lib/embeddings.ts
-  Embedding provider (default: OpenAI text-embedding-3-small)
-  → 1536-dim float vector
+  Mistral mistral-embed (default, OpenAI-compatible)
+  → 1024-dim float vector
         │
         ▼
   retrieveChunks()                ← lib/rag.ts

@@ -7,6 +7,13 @@
 -- Make pgvector operators available for this migration session
 set search_path to public, extensions;
 
+-- Guard: fail loudly if chunks exist — silent dimension truncation would corrupt embeddings
+do $$ begin
+  if exists (select 1 from public.chunks limit 1) then
+    raise exception 'chunks table is not empty — truncate chunks (and cascade citations) before changing embedding dimensions';
+  end if;
+end $$;
+
 -- Drop the HNSW index before altering the column type (Postgres requirement)
 drop index if exists public.chunks_embedding_hnsw_idx;
 
