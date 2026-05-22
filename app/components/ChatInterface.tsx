@@ -28,6 +28,7 @@ interface Message {
 
 interface ChatInterfaceProps {
   sport: Sport;
+  modelId: string | null;
   sessionId: string;
   onNewSession: () => void;
   initialQuestion?: string;
@@ -42,6 +43,7 @@ const SPORT_LABELS: Record<Sport, string> = {
 
 export function ChatInterface({
   sport,
+  modelId,
   sessionId,
   onNewSession,
   initialQuestion,
@@ -92,7 +94,7 @@ export function ChatInterface({
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, sport, session_id: sessionId }),
+        body: JSON.stringify({ question, sport, session_id: sessionId, ...(modelId && { modelId }) }),
       });
 
       if (!res.ok) {

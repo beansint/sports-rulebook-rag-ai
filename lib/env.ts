@@ -13,7 +13,7 @@ export function getOptionalEnv(name: string, fallback: string) {
 }
 
 export function getEmbeddingModel() {
-  return getOptionalEnv("EMBEDDING_MODEL", "text-embedding-3-small");
+  return getOptionalEnv("EMBEDDING_MODEL", "mistral-embed");
 }
 
 export function getDefaultChatModel() {
