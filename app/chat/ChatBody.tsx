@@ -60,6 +60,7 @@ function ChatBodyInner() {
             modelId={selectedModelId}
             sessionId={restoredMessages?.sessionId ?? sessionId}
             onNewSession={handleNewSession}
+            onMessageSent={() => setSidebarRefreshKey((k) => k + 1)}
             initialQuestion={initialQuestion}
           />
         </div>

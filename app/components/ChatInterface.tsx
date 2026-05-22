@@ -31,6 +31,7 @@ interface ChatInterfaceProps {
   modelId: string | null;
   sessionId: string;
   onNewSession: () => void;
+  onMessageSent?: () => void;
   initialQuestion?: string;
 }
 
@@ -46,6 +47,7 @@ export function ChatInterface({
   modelId,
   sessionId,
   onNewSession,
+  onMessageSent,
   initialQuestion,
 }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -94,7 +96,7 @@ export function ChatInterface({
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, sport, session_id: sessionId, ...(modelId && { modelId }) }),
+        body: JSON.stringify({ question, sport, ...(sessionId && { session_id: sessionId }), ...(modelId && { modelId }) }),
       });
 
       if (!res.ok) {
@@ -115,6 +117,7 @@ export function ChatInterface({
 
       setMessages((prev) => [...prev, assistantMsg]);
       setTimeout(scrollToBottom, 50);
+      onMessageSent?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
