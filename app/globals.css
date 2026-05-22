@@ -285,3 +285,85 @@ body {
   border-color: var(--accent);
   color: var(--accent);
 }
+
+/* ── Admin ingest page ───────────────────────────────────────── */
+
+.ingest-title {
+  max-width: 280px;
+  font-size: 0.85rem;
+}
+
+.ingest-pages {
+  color: var(--muted);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.ingest-status {
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ingest-status--none  { color: var(--muted); }
+.ingest-status--running { color: var(--accent); }
+.ingest-status--ok    { color: #22c55e; }
+.ingest-status--fail  { color: #ef4444; }
+
+.ingest-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  background: transparent;
+  transition: background 0.15s, color 0.15s;
+}
+
+.ingest-btn:hover:not(:disabled) {
+  background: var(--accent);
+  color: #fff;
+}
+
+.ingest-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ingest-btn--loading {
+  opacity: 0.7;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.ingest-spinner {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.ingest-steps {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+  line-height: 2;
+}
+
+.ingest-steps code {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+}
