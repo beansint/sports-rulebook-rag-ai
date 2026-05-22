@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button } from "@base-ui/react/button";
 import { Field } from "@base-ui/react/field";
 import {
@@ -36,6 +36,30 @@ interface ChatInterfaceProps {
   initialQuestion?: string;
 }
 
+const SOURCE_SPLIT_RE = /(【Source\s+\d+,\s+p\.\d+】)/g;
+const SOURCE_CAPTURE_RE = /【Source\s+(\d+),\s+p\.(\d+)】/;
+
+function renderAnswerWithRefs(content: string): ReactNode {
+  const parts = content.split(SOURCE_SPLIT_RE);
+  const nodes = parts.map((part, i) => {
+    const m = part.match(SOURCE_CAPTURE_RE);
+    if (!m) return part;
+    return (
+      <sup
+        key={i}
+        aria-label={`Source ${m[1]}, page ${m[2]}`}
+        className="select-none cursor-default inline-flex items-center mx-px"
+        style={{ userSelect: "none", WebkitUserSelect: "none" } as React.CSSProperties}
+      >
+        <span className="text-[9px] font-bold text-brand-orange bg-brand-orange/15 border border-brand-orange/30 rounded px-[3px] py-px leading-none">
+          {m[1]}
+        </span>
+      </sup>
+    );
+  });
+  return nodes;
+}
+
 const SPORT_LABELS: Record<Sport, string> = {
   nba: "NBA",
   nfl: "NFL",
@@ -56,7 +80,7 @@ export function ChatInterface({
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [expandedCitations, setExpandedCitations] = useState<Set<string>>(new Set());
+  const [expandedCitation, setExpandedCitation] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const autoSubmittedRef = useRef(false);
@@ -90,7 +114,7 @@ export function ChatInterface({
       prevSportRef.current = sport;
       setMessages([]);
       setError(null);
-      setExpandedCitations(new Set());
+      setExpandedCitation(null);
       onNewSession();
     }
   }, [sport, onNewSession]);
@@ -170,13 +194,8 @@ export function ChatInterface({
     }
   };
 
-  const toggleCitation = (key: string) => {
-    setExpandedCitations((prev) => {
-      const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
-      return next;
-    });
-  };
+  const toggleCitation = (key: string) =>
+    setExpandedCitation((prev) => (prev === key ? null : key));
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -235,26 +254,30 @@ export function ChatInterface({
                 "bg-brand-orange/10 border border-brand-orange/20 text-gray-100": msg.role === "assistant",
               })}
             >
-              {msg.content}
+              {msg.role === "assistant"
+                ? renderAnswerWithRefs(msg.content)
+                : msg.content}
             </div>
 
             {msg.role === "assistant" && msg.citations && msg.citations.length > 0 && (
-              <div className="w-full max-w-[90%] space-y-1.5">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-brand-muted px-1">
+              <div className="w-full max-w-[90%]">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-brand-muted px-0.5 mb-1.5">
                   Sources
                 </p>
-                {msg.citations.map((cit, i) => {
-                  const key = `${msg.id}-${i}`;
-                  return (
-                    <CitationCard
-                      key={cit.chunkId}
-                      citation={cit}
-                      index={i}
-                      expanded={expandedCitations.has(key)}
-                      onToggle={() => toggleCitation(key)}
-                    />
-                  );
-                })}
+                <div className="flex flex-wrap gap-1.5">
+                  {msg.citations.map((cit, i) => {
+                    const key = `${msg.id}-${i}`;
+                    return (
+                      <CitationCard
+                        key={cit.chunkId}
+                        citation={cit}
+                        index={i}
+                        expanded={expandedCitation === key}
+                        onToggle={() => toggleCitation(key)}
+                      />
+                    );
+                  })}
+                </div>
               </div>
             )}
 
