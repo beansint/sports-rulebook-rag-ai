@@ -16,8 +16,9 @@ Browser
         ├── POST /api/chat      RAG pipeline (auth required)
         ├── POST /api/feedback  Feedback store (auth required)
         ├── POST /api/ingest    PDF ingestion (x-admin-key)
-        ├── GET  /api/models    Model registry (x-admin-key)
-        └── POST /api/models    Model registry (x-admin-key)
+        ├── GET  /api/models          Model registry (x-admin-key)
+        ├── POST /api/models          Model registry (x-admin-key)
+        └── GET  /api/models/enabled  Enabled models list (auth required)
 ```
 
 ---
@@ -46,8 +47,8 @@ User question (string)
         │
         ▼
   embedText()                     ← lib/embeddings.ts
-  OpenAI text-embedding-3-small
-  → 1536-dim float vector
+  Mistral mistral-embed (default, OpenAI-compatible)
+  → 1024-dim float vector
         │
         ▼
   retrieveChunks()                ← lib/rag.ts
@@ -123,9 +124,40 @@ settings
   value           TEXT       -- e.g. default_model_id = "gpt-4.1-mini"
 ```
 
-At query time, `selectModel()` (`lib/models.ts`) resolves the model: admin requests may pass an explicit `modelId`; all other requests use `settings.default_model_id`. Only `enabled = true` models are eligible.
+At query time, `selectModel()` (`lib/models.ts`) resolves the model: any authenticated user may request an `enabled = true` model by passing `modelId` in the chat payload; admins may additionally request disabled models. If no `modelId` is supplied, `settings.default_model_id` is used.
+
+The chat UI exposes a model selector (fetched from `GET /api/models/enabled`) that persists the user's choice in `localStorage` under `sportrules:model`.
 
 Cost is computed from the rates at query time and stored on the `queries` row.
+
+### Embedding provider
+
+Embeddings and generation use **independent** providers:
+
+| Layer | Provider | Env var |
+|-------|----------|---------|
+| Embeddings | Mistral `mistral-embed` (default) | `EMBEDDING_API_KEY` + optional `EMBEDDING_BASE_URL` |
+| Generation | Per `model.provider` in the registry | `CEREBRAS_API_KEY` / `OPENAI_API_KEY` / etc. |
+
+The `chunks.embedding` column is `vector(1024)`, sized for `mistral-embed`. Mistral is OpenAI-compatible — `EMBEDDING_BASE_URL` defaults to `https://api.mistral.ai/v1`. Sign up free at console.mistral.ai (no credit card).
+
+**Switching embedding providers requires:**
+1. A DB migration changing the column to the new dimension
+2. A full re-ingest of all rulebook PDFs
+
+**Local dev with Ollama (free, M2-native):**
+```bash
+brew install ollama
+ollama pull nomic-embed-text   # 274 MB, 768-dim
+ollama serve
+```
+Then in `.env.local`:
+```
+EMBEDDING_BASE_URL=http://localhost:11434/v1
+EMBEDDING_API_KEY=ollama
+EMBEDDING_MODEL=nomic-embed-text
+```
+Run a DB migration (`vector(1024)` → `vector(768)`) and re-ingest before querying. Ollama runs on `localhost` — a cloud embedding provider is required for Vercel deployments.
 
 ---
 
@@ -246,7 +278,8 @@ app/
     chat/route.ts       RAG pipeline endpoint
     ingest/route.ts     PDF ingestion endpoint
     feedback/route.ts   Feedback store endpoint
-    models/route.ts     Model registry endpoint
+    models/route.ts         Model registry endpoint (admin)
+    models/enabled/route.ts Enabled models for authenticated users
   login/
     page.tsx            Login page (server component)
     LoginForm.tsx       Login form (client component)
@@ -268,7 +301,7 @@ lib/
   generation.ts         generateAnswer()
   chunking.ts           chunkPages()
   pdf.ts                extractPdfPages()
-  models.ts             selectModel()
+  models.ts             selectModel(), listEnabledModels()
   cost.ts               computeCost()
   admin.ts              isAdminRequest() — x-admin-key check
   errors.ts             errorResponse(), HttpError

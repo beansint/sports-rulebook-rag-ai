@@ -3,16 +3,19 @@
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ChatInterface } from "../components/ChatInterface";
+import { ModelSelector } from "../components/ModelSelector";
 import { SportSelector } from "../components/SportSelector";
 import { ChatHistorySidebar } from "../components/ChatHistorySidebar";
-import { useSportSelection } from "../hooks/useSportSelection";
 import { useChatSession } from "../hooks/useChatSession";
+import { useModelSelection } from "../hooks/useModelSelection";
+import { useSportSelection } from "../hooks/useSportSelection";
 
 function ChatBodyInner() {
   const params = useSearchParams();
   const initialQuestion = params.get("q") ?? undefined;
   const { sport, setSport } = useSportSelection();
   const { sessionId, newSession } = useChatSession();
+  const { models, selectedModelId, setModelId } = useModelSelection();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [restoredMessages, setRestoredMessages] = useState<null | { sessionId: string }>(null);
   const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0);
@@ -44,11 +47,17 @@ function ChatBodyInner() {
 
         {/* Main column */}
         <div className="flex-1 min-w-0">
-          <div className="mb-4">
+          <div className="mb-4 flex flex-col gap-2">
             <SportSelector sport={sport} onSelect={setSport} />
+            <ModelSelector
+              models={models}
+              selectedModelId={selectedModelId}
+              onSelect={setModelId}
+            />
           </div>
           <ChatInterface
             sport={sport}
+            modelId={selectedModelId}
             sessionId={restoredMessages?.sessionId ?? sessionId}
             onNewSession={handleNewSession}
             initialQuestion={initialQuestion}

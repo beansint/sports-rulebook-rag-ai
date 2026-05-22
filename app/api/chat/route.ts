@@ -21,18 +21,22 @@ const chatSchema = z.object({
 
 export async function POST(request: Request) {
   const startedAt = Date.now();
+  const requestId = crypto.randomUUID().slice(0, 8);
+  let step = "init";
 
   try {
+    step = "auth";
     const serverClient = await getSupabaseServer();
     const { data: { user } } = await serverClient.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    step = "parse";
     const input = chatSchema.parse(await request.json());
     const supabase = getSupabaseAdmin();
 
-    // Rate limit: 30 requests per user per hour (DB-based, no extra infra needed)
+    step = "rate-limit";
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { count } = await supabase
       .from("queries")
@@ -46,16 +50,24 @@ export async function POST(request: Request) {
         { status: 429 },
       );
     }
+
+    step = "model-select";
     const admin = isAdminRequest(request);
     const model = await selectModel(supabase, input.modelId, admin);
+
+    step = "embed";
     const { embedding } = await embedText(input.question);
+
+    step = "retrieve";
     const chunks = await retrieveChunks(supabase, embedding, input.sport);
     const citations = chunks.map(toCitationPayload);
+
+    step = "generate";
     const generated = await generateAnswer(input.question, chunks, model);
     const latencyMs = Date.now() - startedAt;
 
     if (input.session_id) {
-      // Verify the session belongs to this user before mutating
+      step = "session";
       const { data: existingSession } = await supabase
         .from("chat_sessions")
         .select("user_id")
@@ -75,6 +87,7 @@ export async function POST(request: Request) {
       }, { onConflict: "id" });
     }
 
+    step = "db-write";
     const { data: query, error: queryError } = await supabase
       .from("queries")
       .insert({
@@ -128,6 +141,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid chat request", details: error.flatten() }, { status: 400 });
     }
 
-    return errorResponse(error);
+    return errorResponse(error, { requestId, step });
   }
 }
