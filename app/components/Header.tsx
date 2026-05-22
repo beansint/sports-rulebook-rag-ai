@@ -52,12 +52,18 @@ export async function Header() {
           <div className="flex items-center gap-3">
             {isAdmin && (
               <Link
-                href="/admin/users"
+                href="/admin/ingest"
                 className="hidden sm:block text-xs font-bold uppercase tracking-widest text-brand-orange hover:text-brand-orange/70 transition-colors"
               >
                 Admin
               </Link>
             )}
+            <Link
+              href="/chat"
+              className="bg-brand-orange text-white px-4 py-2 text-xs font-bold uppercase tracking-widest hover:bg-brand-orange-hover transition-colors rounded-sm"
+            >
+              Open Chat
+            </Link>
             <div
               className="flex items-center gap-2 px-3 py-1.5 rounded-sm border border-white/10 bg-white/5"
               title={user.email ?? ""}
