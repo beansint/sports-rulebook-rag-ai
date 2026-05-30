@@ -34,6 +34,7 @@ Required server-side variables:
 - `SUPABASE_SERVICE_ROLE_KEY`: Supabase service role key for API routes and ingestion. Never expose to the browser.
 - `OPENAI_API_KEY`: OpenAI key for embeddings and answer generation.
 - `ADMIN_API_KEY`: Shared admin secret accepted via `x-admin-key` for v1 admin routes.
+- `CRON_SECRET`: Secret Vercel injects as `Authorization: Bearer <value>` on cron invocations. Protects `POST /api/cron/keepalive`. Generate with `openssl rand -hex 32`.
 
 Optional variables:
 

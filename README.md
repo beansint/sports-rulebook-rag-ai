@@ -96,6 +96,9 @@ SUPABASE_SERVICE_ROLE_KEY=<service role key>
 ADMIN_EMAIL=you@example.com          # owner account; controls /admin/* access
 ADMIN_API_KEY=<random secret>        # header key for programmatic admin routes
 
+# Cron (keepalive)
+CRON_SECRET=<random secret>          # Vercel sends this as Authorization: Bearer on cron invocations
+
 # LLM / Embeddings
 OPENAI_API_KEY=<key>                 # used for embeddings (text-embedding-3-small)
 # CEREBRAS_API_KEY=<key>             # optional free LLM provider
@@ -145,6 +148,7 @@ This app uses email/password auth with no public signup. Before running locally:
 | `POST /api/ingest` | `x-admin-key` header | Ingest a PDF from Supabase Storage |
 | `GET /api/models` | `x-admin-key` header | List model registry entries |
 | `POST /api/models` | `x-admin-key` header | Create/update a model registry entry |
+| `POST /api/cron/keepalive` | `Authorization: Bearer <CRON_SECRET>` | Supabase keepalive ping (Vercel cron, every 3 days) |
 
 ### Chat request
 
@@ -182,6 +186,7 @@ curl -X POST http://localhost:3000/api/ingest \
 | `models` | Model registry — provider, pricing rates, enabled flag |
 | `settings` | Global config (`default_model_id`) |
 | `ingestion_runs` | Ingestion job log per document |
+| `keepalive` | Single-row scratch table used by the keepalive cron (INSERT + immediate DELETE) |
 
 ---
 
@@ -213,6 +218,7 @@ GitHub Actions run on every PR and push to `dev`/`main`:
 - `ADMIN_API_KEY`
 - `ADMIN_EMAIL`
 - `OPENAI_API_KEY`
+- `CRON_SECRET`
 
 ---
 
