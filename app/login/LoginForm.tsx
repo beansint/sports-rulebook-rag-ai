@@ -30,8 +30,7 @@ export function LoginForm() {
       return;
     }
 
-    router.push(searchParams.get("next") ?? "/chat");
-    router.refresh();
+    router.replace(searchParams.get("next") ?? "/chat");
   }
 
   return (
