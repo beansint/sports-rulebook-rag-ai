@@ -152,7 +152,7 @@ export function DashboardPreview() {
                       Grounded in Official NBA Rulebook
                     </span>
                   </div>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 items-start gap-2 sm:grid-cols-2">
                     {DEMO_CITATIONS.map((cit, i) => (
                       <CitationCard
                         key={cit.chunkId}
@@ -160,6 +160,7 @@ export function DashboardPreview() {
                         citation={cit}
                         index={i}
                         expanded={expanded === i}
+                        showPdfLink={false}
                         onToggle={() =>
                           setExpanded((prev) => (prev === i ? null : i))
                         }
