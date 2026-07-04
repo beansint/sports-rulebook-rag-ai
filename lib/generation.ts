@@ -47,7 +47,14 @@ export async function generateAnswer(question: string, chunks: RetrievedChunk[],
     "You answer sports rulebook questions strictly from the provided official rulebook context.",
     "Do not use outside knowledge.",
     "If the context does not answer the question, say: I don't know. The retrieved rulebook text does not cover that.",
-    "Cite page numbers in the answer when useful, but do not invent section names.",
+    "Do not invent rule or section names; only use ones that appear in the context.",
+    // Formatting: return concise, well-structured GitHub-flavored Markdown.
+    "Format the answer as clear, concise GitHub-flavored Markdown.",
+    "Lead with a one- or two-sentence direct answer, then supporting detail.",
+    "Use **bold** for the key ruling and short bullet lists for multiple conditions or steps. Keep paragraphs short.",
+    // Inline citations keyed to Source numbers so the UI can link them to cards.
+    "Cite every factual claim inline using the source number in square brackets, e.g. [1] or [2][3], matching the 'Source N' blocks in the context.",
+    "Place each citation immediately after the sentence or clause it supports. Do not write out 'Source N, page M' as prose and do not add a separate sources list — the [N] markers are enough.",
   ].join(" ");
   const user = `Question: ${question}\n\nOfficial rulebook context:\n${context}`;
 
