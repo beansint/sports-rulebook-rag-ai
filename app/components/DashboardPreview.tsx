@@ -1,4 +1,77 @@
+"use client";
+
+import { useState } from "react";
+import { SparklesIcon, LayersIcon } from "lucide-react";
+import type { CitationPayload } from "@/types/rag";
+import { AnswerRenderer } from "./AnswerRenderer";
+import { CitationCard } from "./CitationCard";
+
+// Sample answer + citations mirroring a real /chat response, rendered through
+// the SAME components the product uses — so this preview stays accurate to the
+// live experience instead of drifting into a hand-made mockup.
+const DEMO_CITATIONS: CitationPayload[] = [
+  {
+    documentId: "d",
+    chunkId: "c1",
+    pageNumber: 30,
+    score: 0.82,
+    title: "Official NBA Rulebook",
+    season: "2023-24",
+    snippet:
+      "Rule 8, Section III(b): On a throw-in which goes out-of-bounds and is not touched by a player in the game, the ball is returned to the original throw-in spot and the same player attempts the throw-in.",
+  },
+  {
+    documentId: "d",
+    chunkId: "c2",
+    pageNumber: 35,
+    score: 0.78,
+    title: "Official NBA Rulebook",
+    season: "2023-24",
+    snippet:
+      "Rule 8, Section III(c): The ball must be thrown directly inbounds. A ball that goes out-of-bounds without being touched by an in-bounds player is a violation.",
+  },
+  {
+    documentId: "d",
+    chunkId: "c3",
+    pageNumber: 26,
+    score: 0.71,
+    title: "Official NBA Rulebook",
+    season: "2023-24",
+    snippet:
+      "Section IV: Possession stays with the team entitled to the throw-in when the ball is returned to the original spot following a violation.",
+  },
+  {
+    documentId: "d",
+    chunkId: "c4",
+    pageNumber: 40,
+    score: 0.64,
+    title: "Official NBA Rulebook",
+    season: "2023-24",
+    snippet:
+      "The five-second count begins when the ball is placed at the disposal of the player making the throw-in.",
+  },
+];
+
+const DEMO_ANSWER = `A throw-in **must be inbounded to a player who is in-bounds** — passing it to an out-of-bounds teammate is a violation, and you lose the throw-in.
+
+- On a throw-in that goes out-of-bounds untouched, the ball returns to the original throw-in spot [1].
+- The ball must be thrown **directly inbounds**; leaving the court untouched is a violation [2].
+- Possession **stays with your team** — it does not go to the opponent [3].`;
+
 export function DashboardPreview() {
+  const [expanded, setExpanded] = useState<number | null>(0);
+
+  const handleCite = (n: number) => {
+    const idx = n - 1;
+    if (idx < 0 || idx >= DEMO_CITATIONS.length) return;
+    setExpanded(idx);
+    requestAnimationFrame(() =>
+      document
+        .getElementById(`demo-src-${idx}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "nearest" }),
+    );
+  };
+
   return (
     <section
       id="dashboard"
@@ -14,94 +87,84 @@ export function DashboardPreview() {
             THE DASHBOARD OF TRUTH
           </h2>
           <p className="text-brand-muted max-w-xl mx-auto">
-            Instant verification against official rulebooks with source-cited
-            precision.
+            Every answer is written from the official rulebook and shows the
+            exact pages it&apos;s built on — nothing invented.
           </p>
         </div>
 
-        <div className="relative max-w-6xl mx-auto bg-brand-gray border border-white/10 rounded-xl overflow-hidden shadow-2xl glow-orange">
+        <div className="relative max-w-5xl mx-auto bg-brand-gray border border-white/10 rounded-xl overflow-hidden shadow-2xl glow-orange">
           {/* Window controls */}
           <div className="bg-brand-light-gray px-4 py-3 border-b border-white/5 flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-red-500/50" aria-hidden />
             <span className="w-3 h-3 rounded-full bg-yellow-500/50" aria-hidden />
             <span className="w-3 h-3 rounded-full bg-green-500/50" aria-hidden />
             <span className="ml-4 text-[10px] uppercase tracking-widest text-brand-dim">
-              Live Rule Analysis Session · v1.0.0
+              Live Rule Analysis · NBA Rulebook
             </span>
           </div>
 
-          <div className="flex flex-col md:flex-row h-[600px]">
-            {/* Left: chat sample */}
-            <div className="w-full md:w-1/3 border-r border-white/5 flex flex-col p-6 space-y-6">
-              <div className="flex flex-col gap-4">
-                <div className="bg-white/5 p-4 rounded-lg self-start max-w-[90%]">
-                  <p className="text-xs text-brand-orange font-bold uppercase mb-1 tracking-widest">
-                    User
-                  </p>
-                  <p className="text-sm text-white">
-                    Explain the landing zone foul rule for 3-point shooters.
-                  </p>
+          {/* Real answer + citations, exactly as they render in /chat */}
+          <div className="bg-brand-black/40 px-5 py-7 sm:px-8 sm:py-9">
+            <div className="mx-auto max-w-3xl space-y-5">
+              {/* User question */}
+              <div className="flex flex-col items-end gap-1.5">
+                <p className="px-1 text-[10px] font-bold uppercase tracking-widest text-brand-muted">
+                  You
+                </p>
+                <div className="max-w-[85%] rounded-2xl rounded-br-sm bg-brand-orange px-4 py-2.5 text-[15px] leading-relaxed text-white">
+                  If I throw the ball to a teammate who&apos;s out of bounds, is
+                  it our ball or theirs?
                 </div>
-                <div className="bg-brand-orange/10 border border-brand-orange/20 p-4 rounded-lg self-start max-w-[90%]">
-                  <p className="text-xs text-brand-orange font-bold uppercase mb-1 tracking-widest">
+              </div>
+
+              {/* Assistant answer */}
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <span
+                    aria-hidden
+                    className="flex h-6 w-6 flex-none items-center justify-center rounded-md bg-brand-orange"
+                  >
+                    <SparklesIcon size={13} className="text-white" />
+                  </span>
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-brand-orange">
                     SportRules AI
                   </p>
-                  <p className="text-sm leading-relaxed text-gray-100">
-                    According to Article 33.6, a defender must allow the
-                    shooter space to land. Rule 12.B.2 specifies this as a
-                    Flagrant Type 1 if contact is unnecessary…
-                  </p>
                 </div>
-              </div>
-              <div className="mt-auto pt-6 border-t border-white/5">
-                <div className="bg-white/5 rounded p-3 text-xs text-brand-muted italic">
-                  &ldquo;Checking Section 12, Subsection B: Fouls and Penalties…&rdquo;
-                </div>
-              </div>
-            </div>
 
-            {/* Right: PDF preview */}
-            <div className="hidden md:flex flex-1 bg-brand-black p-8 flex-col">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <span className="w-10 h-12 bg-red-900/20 border border-red-500/30 flex items-center justify-center text-red-500 font-bold text-xs rounded">
-                    PDF
-                  </span>
-                  <div>
-                    <p className="text-xs font-bold uppercase text-white tracking-wider">
-                      Official_NBA_Rulebook_2024.pdf
+                <div className="pl-8">
+                  <AnswerRenderer
+                    content={DEMO_ANSWER}
+                    citations={DEMO_CITATIONS}
+                    onCite={handleCite}
+                  />
+                </div>
+
+                <div className="pl-8">
+                  <div className="mb-2 flex items-center gap-2">
+                    <LayersIcon size={13} className="text-brand-muted" aria-hidden />
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-brand-muted">
+                      Sources
                     </p>
-                    <p className="text-[10px] text-brand-dim uppercase tracking-widest">
-                      Page 54 of 128 · Verified
-                    </p>
+                    <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-white/10 px-1 text-[10px] font-bold tabular-nums text-brand-muted">
+                      {DEMO_CITATIONS.length}
+                    </span>
+                    <span className="ml-auto truncate text-[11px] text-brand-dim">
+                      Grounded in Official NBA Rulebook
+                    </span>
                   </div>
-                </div>
-                <span className="px-3 py-1 bg-brand-orange/20 text-brand-orange rounded-full text-[10px] font-bold tracking-widest">
-                  MATCH FOUND
-                </span>
-              </div>
-
-              <div className="flex-1 bg-brand-light-gray rounded-lg p-10 relative overflow-hidden">
-                <div className="space-y-4 opacity-40">
-                  <div className="h-4 bg-white/10 w-3/4 rounded" />
-                  <div className="h-4 bg-white/10 w-full rounded" />
-                  <div className="h-4 bg-brand-orange/40 w-full rounded border border-brand-orange/50" />
-                  <div className="h-4 bg-brand-orange/40 w-5/6 rounded border border-brand-orange/50" />
-                  <div className="h-4 bg-white/10 w-full rounded" />
-                  <div className="h-4 bg-white/10 w-2/3 rounded" />
-                  <div className="h-4 bg-white/10 w-full rounded" />
-                </div>
-
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="bg-brand-orange/10 border border-brand-orange p-6 max-w-md backdrop-blur-sm">
-                    <p className="text-brand-orange font-heading text-xl mb-2 tracking-wider">
-                      ARTICLE 33.6: CYLINDER
-                    </p>
-                    <p className="text-xs leading-relaxed text-gray-200">
-                      The shooter&apos;s cylinder includes the space above the
-                      floor occupied by the player and the space where the
-                      player will land… [See Figure 14.a]
-                    </p>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {DEMO_CITATIONS.map((cit, i) => (
+                      <CitationCard
+                        key={cit.chunkId}
+                        domId={`demo-src-${i}`}
+                        citation={cit}
+                        index={i}
+                        expanded={expanded === i}
+                        onToggle={() =>
+                          setExpanded((prev) => (prev === i ? null : i))
+                        }
+                      />
+                    ))}
                   </div>
                 </div>
               </div>
