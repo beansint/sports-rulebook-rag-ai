@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { SparklesIcon, LayersIcon } from "lucide-react";
+import { SparklesIcon, LayersIcon, BookMarkedIcon } from "lucide-react";
 import type { CitationPayload } from "@/types/rag";
 import { AnswerRenderer } from "./AnswerRenderer";
 import { CitationCard } from "./CitationCard";
+import { SportBadge } from "./SportBadge";
+import { SPORT_META } from "@/lib/sports";
 
 // Sample answer + citations mirroring a real /chat response, rendered through
 // the SAME components the product uses — so this preview stays accurate to the
@@ -119,7 +121,7 @@ export function DashboardPreview() {
 
               {/* Assistant answer */}
               <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
                   <span
                     aria-hidden
                     className="flex h-6 w-6 flex-none items-center justify-center rounded-md bg-brand-orange"
@@ -129,6 +131,14 @@ export function DashboardPreview() {
                   <p className="text-[11px] font-bold uppercase tracking-widest text-brand-orange">
                     SportRules AI
                   </p>
+                  <span className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] py-0.5 pl-1 pr-2.5">
+                    <SportBadge sport="nba" className="text-[9px] px-1 py-0" />
+                    <BookMarkedIcon size={11} className="text-brand-dim" aria-hidden />
+                    <span className="text-[11px] text-brand-muted">
+                      {SPORT_META.nba.rulebook}
+                      <span className="text-brand-dim"> · {SPORT_META.nba.season}</span>
+                    </span>
+                  </span>
                 </div>
 
                 <div className="pl-8">
@@ -148,8 +158,11 @@ export function DashboardPreview() {
                     <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-white/10 px-1 text-[10px] font-bold tabular-nums text-brand-muted">
                       {DEMO_CITATIONS.length}
                     </span>
-                    <span className="ml-auto truncate text-[11px] text-brand-dim">
-                      Grounded in Official NBA Rulebook
+                    <span className="ml-auto text-[11px] text-brand-dim">
+                      Top match{" "}
+                      <span className="font-bold tabular-nums text-brand-muted">
+                        {Math.round((DEMO_CITATIONS[0]?.score ?? 0) * 100)}%
+                      </span>
                     </span>
                   </div>
                   <div className="grid grid-cols-1 items-start gap-2 sm:grid-cols-2">
