@@ -85,3 +85,5 @@ results/
 # Tool artifacts
 .codex/
 supabase/.temp/
+.vercel
+.env*.local

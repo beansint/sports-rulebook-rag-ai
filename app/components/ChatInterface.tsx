@@ -11,19 +11,23 @@ import {
   AlertCircleIcon,
   SparklesIcon,
   LayersIcon,
+  BookMarkedIcon,
 } from "lucide-react";
 import clsx from "clsx";
 import type { CitationPayload } from "@/types/rag";
 import { AnswerRenderer } from "./AnswerRenderer";
 import { CitationCard } from "./CitationCard";
+import { SportBadge } from "./SportBadge";
 import { SuggestionChips } from "./SuggestionChips";
 import { TypingIndicator } from "./TypingIndicator";
 import type { Sport } from "@/app/hooks/useSportSelection";
+import { SPORT_META } from "@/lib/sports";
 
 interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
+  sport?: Sport;
   citations?: CitationPayload[];
   queryId?: string;
   feedback?: 1 | 2 | null;
@@ -76,10 +80,10 @@ export function ChatInterface({
     setError(null);
     fetch(`/api/chat/sessions/${restoreSessionId}`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then(({ messages: loaded }: { messages: { id: string; question: string; answer: string; citations: CitationPayload[] }[] }) => {
+      .then(({ messages: loaded }: { messages: { id: string; question: string; answer: string; sport?: Sport; citations: CitationPayload[] }[] }) => {
         const restored: Message[] = loaded.flatMap((m) => [
           { id: `${m.id}-q`, role: "user" as const, content: m.question },
-          { id: m.id, role: "assistant" as const, content: m.answer, citations: m.citations ?? [], queryId: m.id, feedback: null },
+          { id: m.id, role: "assistant" as const, content: m.answer, sport: m.sport, citations: m.citations ?? [], queryId: m.id, feedback: null },
         ]);
         setMessages(restored);
         setTimeout(scrollToBottom, 50);
@@ -133,6 +137,7 @@ export function ChatInterface({
         id: crypto.randomUUID(),
         role: "assistant",
         content: data.answer,
+        sport,
         citations: data.citations ?? [],
         queryId: data.queryId,
         feedback: null,
@@ -235,12 +240,12 @@ export function ChatInterface({
           }
 
           const citations = msg.citations ?? [];
-          const groundedTitle = citations.find((c) => c.title)?.title;
+          const sportMeta = msg.sport ? SPORT_META[msg.sport] : undefined;
 
           return (
             <div key={msg.id} className="flex flex-col gap-3">
-              {/* Answer header */}
-              <div className="flex items-center gap-2">
+              {/* Answer header + source subheader (which sport / rulebook) */}
+              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
                 <span
                   aria-hidden
                   className="flex h-6 w-6 flex-none items-center justify-center rounded-md bg-brand-orange"
@@ -250,6 +255,26 @@ export function ChatInterface({
                 <p className="text-[11px] font-bold uppercase tracking-widest text-brand-orange">
                   SportRules AI
                 </p>
+                {sportMeta && (
+                  <span
+                    className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] py-0.5 pl-1 pr-2.5"
+                    title={`Answer grounded in the ${sportMeta.league} rulebook`}
+                  >
+                    <SportBadge
+                      sport={msg.sport!}
+                      className="text-[9px] px-1 py-0"
+                    />
+                    <BookMarkedIcon
+                      size={11}
+                      className="text-brand-dim"
+                      aria-hidden
+                    />
+                    <span className="text-[11px] text-brand-muted">
+                      {sportMeta.rulebook}
+                      <span className="text-brand-dim"> · {sportMeta.season}</span>
+                    </span>
+                  </span>
+                )}
               </div>
 
               {/* Answer body — full-width, rendered markdown with inline citations */}
@@ -272,11 +297,12 @@ export function ChatInterface({
                     <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-white/10 px-1 text-[10px] font-bold tabular-nums text-brand-muted">
                       {citations.length}
                     </span>
-                    {groundedTitle && (
-                      <span className="ml-auto truncate text-[11px] text-brand-dim">
-                        Grounded in {groundedTitle}
+                    <span className="ml-auto text-[11px] text-brand-dim">
+                      Top match{" "}
+                      <span className="font-bold tabular-nums text-brand-muted">
+                        {Math.round((citations[0]?.score ?? 0) * 100)}%
                       </span>
-                    )}
+                    </span>
                   </div>
                   <div className="grid grid-cols-1 items-start gap-2 sm:grid-cols-2">
                     {citations.map((cit, i) => {
