@@ -12,12 +12,16 @@ interface Session {
   updatedAt: string;
 }
 
+const HISTORY_CACHE_KEY = "sportrules:history:v1";
+
 interface ChatHistorySidebarProps {
   sessionId: string;
   /** Increment to trigger a history re-fetch (e.g. after new session starts or session selected) */
   refreshKey: number;
   onNewSession: () => void;
   onSelectSession: (id: string) => void;
+  /** Called with the loaded sessions (newest first) after each fetch/cache read. */
+  onSessionsLoaded?: (sessions: Session[]) => void;
   open: boolean;
   onToggle: () => void;
 }
@@ -54,6 +58,7 @@ export function ChatHistorySidebar({
   refreshKey,
   onNewSession,
   onSelectSession,
+  onSessionsLoaded,
   open,
   onToggle,
 }: ChatHistorySidebarProps) {
@@ -61,11 +66,36 @@ export function ChatHistorySidebar({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Instant paint + auto-select from the session cache while we revalidate.
+    try {
+      const cached = sessionStorage.getItem(HISTORY_CACHE_KEY);
+      if (cached) {
+        const list = JSON.parse(cached) as Session[];
+        if (Array.isArray(list) && list.length > 0) {
+          setSessions(list);
+          setLoading(false);
+          onSessionsLoaded?.(list);
+        }
+      }
+    } catch {
+      // ignore malformed cache
+    }
+
     fetch("/api/chat/history")
       .then((r) => r.json())
-      .then((data) => setSessions(data.sessions ?? []))
+      .then((data) => {
+        const list: Session[] = data.sessions ?? [];
+        setSessions(list);
+        onSessionsLoaded?.(list);
+        try {
+          sessionStorage.setItem(HISTORY_CACHE_KEY, JSON.stringify(list));
+        } catch {
+          // ignore quota errors
+        }
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshKey]);
 
   const groups = groupSessions(sessions);
