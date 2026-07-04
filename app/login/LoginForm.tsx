@@ -33,11 +33,12 @@ export function LoginForm() {
     // session cookie written by signInWithPassword is attached to the request,
     // letting the proxy's getUser() see the authenticated session. A soft
     // client navigation races the cookie write and bounces back to /login.
+    // Only allow same-origin absolute paths. Require a leading "/" that is NOT
+    // followed by "/" or "\" — browsers normalise "/\evil.com" to the
+    // protocol-relative "//evil.com", so both must be rejected to prevent an
+    // open redirect.
     const nextParam = searchParams.get("next");
-    const dest =
-      nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
-        ? nextParam
-        : "/chat";
+    const dest = nextParam && /^\/(?![/\\])/.test(nextParam) ? nextParam : "/chat";
     window.location.assign(dest);
   }
 
