@@ -53,8 +53,8 @@ This is a domain RAG app focused on dense, authoritative reference content, simi
 
 ### 4.1 In Scope
 
-- **UI focus:** NBA rulebook assistant for v1.
-- **Ingestion pipeline:** supports multiple sports (NBA, NFL, MLB, FIFA) as PDF rulebooks, but only NBA is exposed in the UI in v1.
+- **UI focus:** multi-sport rulebook assistant — NBA, NFL, MLB, and FIFA are all ingested, embedded, and selectable in the chat UI.
+- **Ingestion pipeline:** supports all four sports (NBA, NFL, MLB, FIFA) as PDF rulebooks; each is ingested and exposed in the UI with its answers labelled by source rulebook + edition.
 - **Corpus type:** PDF rulebooks (plus internal chunk metadata).
 - Web app (desktop + mobile responsive) built with **Next.js**.
 - RAG pipeline:

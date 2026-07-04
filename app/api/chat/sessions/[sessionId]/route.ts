@@ -38,7 +38,7 @@ export async function GET(
 
     const { data: queries, error } = await supabase
       .from("queries")
-      .select("id, question, answer, retrieved_chunks, created_at")
+      .select("id, question, answer, sport, retrieved_chunks, created_at")
       .eq("session_id", sessionId)
       .order("created_at", { ascending: true });
 
@@ -49,6 +49,7 @@ export async function GET(
         id: q.id,
         question: q.question,
         answer: q.answer,
+        sport: q.sport,
         citations: q.retrieved_chunks ?? [],
         createdAt: q.created_at,
       })),

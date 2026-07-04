@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **SportRules AI** – A RAG-based sports rulebook Q&A web app. Users ask natural-language questions about official sports rulebooks and receive grounded answers with citations and a PDF viewer showing the exact rule text.
 
-v1 is scoped to the NBA rulebook as the user-facing sport, with ingestion support for NBA, NFL, MLB, and FIFA/IFAB.
+All four sports — NBA, NFL, MLB, and FIFA/IFAB — are ingested, embedded, and selectable in the chat UI. Each answer is grounded in that sport's official rulebook and labels its source (rulebook + edition). The canonical per-sport metadata lives in `lib/sports.ts`.
 
 ## Stack
 
