@@ -7,7 +7,7 @@ import { generateAnswer } from "@/lib/generation";
 import { selectModel } from "@/lib/models";
 import { retrieveChunks, toCitationPayload } from "@/lib/rag";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { getSupabaseServer } from "@/lib/supabase/server";
+import { getAuthUser } from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -26,8 +26,7 @@ export async function POST(request: Request) {
 
   try {
     step = "auth";
-    const serverClient = await getSupabaseServer();
-    const { data: { user } } = await serverClient.auth.getUser();
+    const user = await getAuthUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

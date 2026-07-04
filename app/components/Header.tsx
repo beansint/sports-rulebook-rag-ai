@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getSupabaseServer } from "@/lib/supabase/server";
+import { getAuthUser } from "@/lib/auth";
 import { signOut } from "@/app/login/actions";
 
 const NAV_LINKS = [
@@ -10,8 +10,7 @@ const NAV_LINKS = [
 ];
 
 export async function Header() {
-  const supabase = await getSupabaseServer();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getAuthUser();
 
   const isAdmin = user?.email === process.env.ADMIN_EMAIL;
 
