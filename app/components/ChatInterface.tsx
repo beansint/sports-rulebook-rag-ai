@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@base-ui/react/button";
 import { Field } from "@base-ui/react/field";
 import {
@@ -9,9 +9,12 @@ import {
   ThumbsDownIcon,
   RotateCcwIcon,
   AlertCircleIcon,
+  SparklesIcon,
+  LayersIcon,
 } from "lucide-react";
 import clsx from "clsx";
 import type { CitationPayload } from "@/types/rag";
+import { AnswerRenderer } from "./AnswerRenderer";
 import { CitationCard } from "./CitationCard";
 import { SuggestionChips } from "./SuggestionChips";
 import { TypingIndicator } from "./TypingIndicator";
@@ -34,30 +37,6 @@ interface ChatInterfaceProps {
   onNewSession: () => void;
   onMessageSent?: () => void;
   initialQuestion?: string;
-}
-
-const SOURCE_SPLIT_RE = /(【Source\s+\d+,\s+p\.\d+】)/g;
-const SOURCE_CAPTURE_RE = /【Source\s+(\d+),\s+p\.(\d+)】/;
-
-function renderAnswerWithRefs(content: string): ReactNode {
-  const parts = content.split(SOURCE_SPLIT_RE);
-  const nodes = parts.map((part, i) => {
-    const m = part.match(SOURCE_CAPTURE_RE);
-    if (!m) return part;
-    return (
-      <sup
-        key={i}
-        aria-label={`Source ${m[1]}, page ${m[2]}`}
-        className="select-none cursor-default inline-flex items-center mx-px"
-        style={{ userSelect: "none", WebkitUserSelect: "none" } as React.CSSProperties}
-      >
-        <span className="text-[9px] font-bold text-brand-orange bg-brand-orange/15 border border-brand-orange/30 rounded px-[3px] py-px leading-none">
-          {m[1]}
-        </span>
-      </sup>
-    );
-  });
-  return nodes;
 }
 
 const SPORT_LABELS: Record<Sport, string> = {
@@ -197,6 +176,19 @@ export function ChatInterface({
   const toggleCitation = (key: string) =>
     setExpandedCitation((prev) => (prev === key ? null : key));
 
+  // Inline [n] chip → expand the matching source card and scroll it into view.
+  const handleCite = (msgId: string, citations: CitationPayload[], sourceNumber: number) => {
+    const idx = sourceNumber - 1;
+    if (idx < 0 || idx >= citations.length) return;
+    const key = `${msgId}-${idx}`;
+    setExpandedCitation(key);
+    requestAnimationFrame(() => {
+      document
+        .getElementById(`src-${key}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -228,98 +220,123 @@ export function ChatInterface({
           </div>
         )}
 
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={clsx("flex flex-col gap-2", {
-              "items-end": msg.role === "user",
-              "items-start": msg.role === "assistant",
-            })}
-          >
-            <p
-              className={clsx(
-                "text-[10px] font-bold uppercase tracking-widest px-1",
-                {
-                  "text-brand-orange": msg.role === "assistant",
-                  "text-brand-muted": msg.role === "user",
-                },
-              )}
-            >
-              {msg.role === "assistant" ? "SportRules AI" : "You"}
-            </p>
-
-            <div
-              className={clsx("rounded-lg px-4 py-3 max-w-[90%] text-sm leading-relaxed", {
-                "bg-brand-orange text-white": msg.role === "user",
-                "bg-brand-orange/10 border border-brand-orange/20 text-gray-100": msg.role === "assistant",
-              })}
-            >
-              {msg.role === "assistant"
-                ? renderAnswerWithRefs(msg.content)
-                : msg.content}
-            </div>
-
-            {msg.role === "assistant" && msg.citations && msg.citations.length > 0 && (
-              <div className="w-full max-w-[90%]">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-brand-muted px-0.5 mb-1.5">
-                  Sources
+        {messages.map((msg) => {
+          if (msg.role === "user") {
+            return (
+              <div key={msg.id} className="flex flex-col items-end gap-1.5">
+                <p className="px-1 text-[10px] font-bold uppercase tracking-widest text-brand-muted">
+                  You
                 </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {msg.citations.map((cit, i) => {
-                    const key = `${msg.id}-${i}`;
-                    return (
-                      <CitationCard
-                        key={cit.chunkId}
-                        citation={cit}
-                        index={i}
-                        expanded={expandedCitation === key}
-                        onToggle={() => toggleCitation(key)}
-                      />
-                    );
-                  })}
+                <div className="max-w-[85%] rounded-2xl rounded-br-sm bg-brand-orange px-4 py-2.5 text-[15px] leading-relaxed text-white">
+                  {msg.content}
                 </div>
               </div>
-            )}
+            );
+          }
 
-            {msg.role === "assistant" && msg.queryId && (
-              <div className="flex gap-1 items-center" aria-label="Rate this answer">
-                <span className="text-[10px] uppercase tracking-widest text-brand-muted mr-1">
-                  Helpful?
+          const citations = msg.citations ?? [];
+          const groundedTitle = citations.find((c) => c.title)?.title;
+
+          return (
+            <div key={msg.id} className="flex flex-col gap-3">
+              {/* Answer header */}
+              <div className="flex items-center gap-2">
+                <span
+                  aria-hidden
+                  className="flex h-6 w-6 flex-none items-center justify-center rounded-md bg-brand-orange"
+                >
+                  <SparklesIcon size={13} className="text-white" />
                 </span>
-                <Button
-                  aria-label="Thumbs up"
-                  aria-pressed={msg.feedback === 1}
-                  onClick={() => handleFeedback(msg.id, msg.queryId!, 1)}
-                  disabled={msg.feedback !== null && msg.feedback !== undefined}
-                  className={clsx(
-                    "p-1.5 rounded-md transition-colors cursor-pointer",
-                    msg.feedback === 1
-                      ? "text-brand-orange bg-brand-orange/10"
-                      : "text-brand-muted hover:text-white hover:bg-white/5",
-                    "disabled:opacity-40 disabled:cursor-not-allowed",
-                  )}
-                >
-                  <ThumbsUpIcon size={13} aria-hidden />
-                </Button>
-                <Button
-                  aria-label="Thumbs down"
-                  aria-pressed={msg.feedback === 2}
-                  onClick={() => handleFeedback(msg.id, msg.queryId!, 2)}
-                  disabled={msg.feedback !== null && msg.feedback !== undefined}
-                  className={clsx(
-                    "p-1.5 rounded-md transition-colors cursor-pointer",
-                    msg.feedback === 2
-                      ? "text-brand-orange bg-brand-orange/10"
-                      : "text-brand-muted hover:text-white hover:bg-white/5",
-                    "disabled:opacity-40 disabled:cursor-not-allowed",
-                  )}
-                >
-                  <ThumbsDownIcon size={13} aria-hidden />
-                </Button>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-brand-orange">
+                  SportRules AI
+                </p>
               </div>
-            )}
-          </div>
-        ))}
+
+              {/* Answer body — full-width, rendered markdown with inline citations */}
+              <div className="pl-8">
+                <AnswerRenderer
+                  content={msg.content}
+                  citations={citations}
+                  onCite={(n) => handleCite(msg.id, citations, n)}
+                />
+              </div>
+
+              {/* Sources */}
+              {citations.length > 0 && (
+                <div className="pl-8">
+                  <div className="mb-2 flex items-center gap-2">
+                    <LayersIcon size={13} className="text-brand-muted" aria-hidden />
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-brand-muted">
+                      Sources
+                    </p>
+                    <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-white/10 px-1 text-[10px] font-bold tabular-nums text-brand-muted">
+                      {citations.length}
+                    </span>
+                    {groundedTitle && (
+                      <span className="ml-auto truncate text-[11px] text-brand-dim">
+                        Grounded in {groundedTitle}
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {citations.map((cit, i) => {
+                      const key = `${msg.id}-${i}`;
+                      return (
+                        <CitationCard
+                          key={cit.chunkId}
+                          domId={`src-${key}`}
+                          citation={cit}
+                          index={i}
+                          expanded={expandedCitation === key}
+                          onToggle={() => toggleCitation(key)}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Feedback */}
+              {msg.queryId && (
+                <div className="flex items-center gap-1 pl-8" aria-label="Rate this answer">
+                  <span className="mr-1 text-[10px] uppercase tracking-widest text-brand-muted">
+                    Helpful?
+                  </span>
+                  <Button
+                    aria-label="Thumbs up"
+                    aria-pressed={msg.feedback === 1}
+                    onClick={() => handleFeedback(msg.id, msg.queryId!, 1)}
+                    disabled={msg.feedback !== null && msg.feedback !== undefined}
+                    className={clsx(
+                      "rounded-md p-1.5 transition-colors cursor-pointer",
+                      msg.feedback === 1
+                        ? "bg-brand-orange/10 text-brand-orange"
+                        : "text-brand-muted hover:bg-white/5 hover:text-white",
+                      "disabled:cursor-not-allowed disabled:opacity-40",
+                    )}
+                  >
+                    <ThumbsUpIcon size={13} aria-hidden />
+                  </Button>
+                  <Button
+                    aria-label="Thumbs down"
+                    aria-pressed={msg.feedback === 2}
+                    onClick={() => handleFeedback(msg.id, msg.queryId!, 2)}
+                    disabled={msg.feedback !== null && msg.feedback !== undefined}
+                    className={clsx(
+                      "rounded-md p-1.5 transition-colors cursor-pointer",
+                      msg.feedback === 2
+                        ? "bg-brand-orange/10 text-brand-orange"
+                        : "text-brand-muted hover:bg-white/5 hover:text-white",
+                      "disabled:cursor-not-allowed disabled:opacity-40",
+                    )}
+                  >
+                    <ThumbsDownIcon size={13} aria-hidden />
+                  </Button>
+                </div>
+              )}
+            </div>
+          );
+        })}
 
         {isLoading && (
           <div className="flex flex-col gap-2 items-start">
