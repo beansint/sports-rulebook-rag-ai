@@ -27,6 +27,11 @@ export type CitationPayload = {
   chunkId: string;
   snippet: string;
   score: number;
+  /** Rulebook document title, e.g. "Official NBA Rulebook". Optional for
+   *  backward compatibility with citations persisted before this field. */
+  title?: string;
+  /** Rulebook season/edition, e.g. "2023-24". Optional for the same reason. */
+  season?: string;
 };
 
 export type TokenUsage = {

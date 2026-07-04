@@ -27,5 +27,7 @@ export function toCitationPayload(chunk: RetrievedChunk): CitationPayload {
     chunkId: chunk.chunk_id,
     snippet: makeSnippet(chunk.content),
     score: Number(chunk.similarity),
+    title: chunk.title,
+    season: chunk.season,
   };
 }
