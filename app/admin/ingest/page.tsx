@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSupabaseServer } from "@/lib/supabase/server";
@@ -5,6 +6,11 @@ import manifest from "@/data/rulebook-manifest.json";
 import { getIngestStatuses } from "./actions";
 import { IngestBoard } from "./IngestBoard";
 import type { ManifestEntry } from "./actions";
+
+export const metadata: Metadata = {
+  title: "Admin · Ingest",
+  robots: { index: false, follow: false },
+};
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
