@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { CreateUserForm } from "./CreateUserForm";
 import { DeleteUserButton } from "./DeleteUserButton";
+
+export const metadata: Metadata = {
+  title: "Admin · Users",
+  robots: { index: false, follow: false },
+};
 
 export const dynamic = "force-dynamic";
 
