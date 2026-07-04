@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
 
 export function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,7 +29,17 @@ export function LoginForm() {
       return;
     }
 
-    router.replace(searchParams.get("next") ?? "/chat");
+    // Hard navigation (not router.replace): forces a full document load so the
+    // session cookie written by signInWithPassword is attached to the request,
+    // letting the proxy's getUser() see the authenticated session. A soft
+    // client navigation races the cookie write and bounces back to /login.
+    // Only allow same-origin absolute paths. Require a leading "/" that is NOT
+    // followed by "/" or "\" — browsers normalise "/\evil.com" to the
+    // protocol-relative "//evil.com", so both must be rejected to prevent an
+    // open redirect.
+    const nextParam = searchParams.get("next");
+    const dest = nextParam && /^\/(?![/\\])/.test(nextParam) ? nextParam : "/chat";
+    window.location.assign(dest);
   }
 
   return (
