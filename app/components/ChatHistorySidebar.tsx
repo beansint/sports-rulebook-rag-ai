@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { PlusIcon, MenuIcon, XIcon } from "lucide-react";
-import { SportBadge } from "./SportBadge";
+import { SessionItem } from "./SessionItem";
 
 interface Session {
   id: string;
@@ -76,7 +76,7 @@ export function ChatHistorySidebar({
       <button
         onClick={onToggle}
         aria-label={open ? "Close history" : "Open history"}
-        className="lg:hidden fixed top-20 left-4 z-30 p-2 rounded-lg bg-brand-light-gray border border-white/10 text-brand-muted hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
+        className="lg:hidden fixed top-20 left-4 z-30 p-2 rounded-lg bg-brand-light-gray border border-white/10 text-brand-muted hover:text-white cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
       >
         {open ? <XIcon size={16} /> : <MenuIcon size={16} />}
       </button>
@@ -93,7 +93,7 @@ export function ChatHistorySidebar({
         <div className="p-3 border-b border-white/10">
           <button
             onClick={onNewSession}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-brand-orange text-white text-xs font-bold uppercase tracking-widest hover:bg-brand-orange-hover transition-colors min-h-[44px]"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-brand-orange text-white text-xs font-bold uppercase tracking-widest hover:bg-brand-orange-hover transition-colors cursor-pointer min-h-[44px]"
           >
             <PlusIcon size={14} aria-hidden />
             New Chat
@@ -122,21 +122,12 @@ export function ChatHistorySidebar({
                   {label}
                 </p>
                 {items.map((s) => (
-                  <button
+                  <SessionItem
                     key={s.id}
-                    onClick={() => onSelectSession(s.id)}
-                    className={clsx(
-                      "w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left text-xs transition-colors min-h-[44px]",
-                      s.id === sessionId
-                        ? "bg-brand-orange/15 text-white"
-                        : "text-brand-muted hover:text-white hover:bg-white/5",
-                    )}
-                  >
-                    <SportBadge sport={s.sport} className="shrink-0 text-[9px] px-1 py-0" />
-                    <span className="truncate flex-1">
-                      {s.title ?? "Untitled"}
-                    </span>
-                  </button>
+                    data={s}
+                    active={s.id === sessionId}
+                    onSelect={() => onSelectSession(s.id)}
+                  />
                 ))}
               </div>
             ))
