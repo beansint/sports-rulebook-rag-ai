@@ -23,20 +23,16 @@ export function CitationCard({
 }: CitationCardProps) {
   const relevance = Math.round(citation.score * 100);
   const ruleRef = extractRuleRef(citation.snippet);
-  const snippet =
-    citation.snippet.length > 320
-      ? citation.snippet.slice(0, 317) + "…"
-      : citation.snippet;
+  const meta = [citation.title, citation.season].filter(Boolean).join(" · ");
 
-  // Meter fill tone tiers by match strength — still on-brand, avoids the
-  // "everything is orange" flatness while never using color as the only signal
-  // (the percentage is always shown as text).
+  // Meter tone tiers by match strength — kept subtle; the % is always shown as
+  // text so color is never the only signal.
   const meterTone =
     relevance >= 80
       ? "bg-brand-orange"
       : relevance >= 65
-        ? "bg-brand-orange/70"
-        : "bg-brand-orange/40";
+        ? "bg-brand-orange/60"
+        : "bg-brand-orange/35";
 
   return (
     <button
@@ -48,75 +44,59 @@ export function CitationCard({
         ruleRef ? `, ${ruleRef}` : ""
       }, ${relevance}% match. ${expanded ? "Collapse" : "Expand"} excerpt.`}
       className={clsx(
-        "group flex w-full scroll-mt-28 flex-col gap-2 rounded-xl border p-3 text-left transition-colors cursor-pointer",
+        "group flex w-full scroll-mt-28 flex-col gap-1.5 rounded-lg border px-2.5 py-2 text-left transition-colors cursor-pointer",
         expanded
-          ? "border-brand-orange/50 bg-brand-orange/[0.07]"
+          ? "border-brand-orange/50 bg-brand-orange/[0.06]"
           : "border-white/10 bg-white/[0.03] hover:border-brand-orange/40 hover:bg-white/[0.05]",
       )}
     >
-      {/* Header: numbered badge + page / rule ref + chevron */}
-      <div className="flex items-start gap-2.5">
+      {/* Single-row header */}
+      <div className="flex items-center gap-2">
         <span
           aria-hidden
-          className="mt-px flex h-5 w-5 flex-none items-center justify-center rounded-md bg-brand-orange text-[11px] font-bold leading-none text-white tabular-nums"
+          className="flex h-4 w-4 flex-none items-center justify-center rounded bg-brand-orange text-[10px] font-bold leading-none text-white tabular-nums"
         >
           {index + 1}
         </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5 text-[13px] font-semibold text-white">
-            <BookOpenIcon size={12} className="flex-none text-brand-orange" aria-hidden />
-            <span className="tabular-nums">Page {citation.pageNumber}</span>
-            {ruleRef && (
-              <>
-                <span className="text-brand-dim" aria-hidden>
-                  ·
-                </span>
-                <span className="truncate font-medium text-brand-muted">{ruleRef}</span>
-              </>
-            )}
-          </div>
-          {(citation.title || citation.season) && (
-            <p className="mt-0.5 truncate text-[11px] text-brand-dim">
-              {[citation.title, citation.season].filter(Boolean).join(" · ")}
-            </p>
-          )}
-        </div>
+        <BookOpenIcon size={11} className="flex-none text-brand-orange/80" aria-hidden />
+        <span className="flex-none text-[12px] font-semibold tabular-nums text-white">
+          Page {citation.pageNumber}
+        </span>
+        {ruleRef && (
+          <span className="min-w-0 truncate text-[11px] text-brand-muted">
+            · {ruleRef}
+          </span>
+        )}
+        <span className="ml-auto flex-none text-[11px] font-bold tabular-nums text-brand-muted">
+          {relevance}%
+        </span>
         <ChevronDownIcon
-          size={15}
+          size={13}
           aria-hidden
           className={clsx(
-            "mt-0.5 flex-none text-brand-dim transition-transform group-hover:text-brand-muted",
+            "flex-none text-brand-dim transition-transform group-hover:text-brand-muted",
             expanded && "rotate-180 text-brand-orange",
           )}
         />
       </div>
 
-      {/* Relevance meter */}
-      <div className="flex items-center gap-2">
+      {/* Slim relevance meter */}
+      <div className="h-1 w-full overflow-hidden rounded-full bg-white/[0.07]">
         <div
-          className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10"
-          role="img"
-          aria-label={`${relevance}% relevance`}
-        >
-          <div
-            className={clsx("h-full rounded-full", meterTone)}
-            style={{ width: `${Math.max(relevance, 4)}%` }}
-          />
-        </div>
-        <span className="text-[11px] font-bold tabular-nums text-brand-muted">
-          {relevance}%
-        </span>
+          className={clsx("h-full rounded-full", meterTone)}
+          style={{ width: `${Math.max(relevance, 4)}%` }}
+        />
       </div>
 
-      {/* Snippet — clamped when collapsed, full when expanded */}
-      <p
-        className={clsx(
-          "text-[12.5px] leading-relaxed text-gray-300",
-          !expanded && "line-clamp-2",
-        )}
-      >
-        {expanded ? snippet : citation.snippet}
-      </p>
+      {/* Excerpt — only when expanded, keeps the collapsed card compact */}
+      {expanded && (
+        <div className="mt-0.5 space-y-1.5">
+          <p className="text-[12.5px] leading-relaxed text-gray-300">
+            {citation.snippet}
+          </p>
+          {meta && <p className="text-[10.5px] text-brand-dim">{meta}</p>}
+        </div>
+      )}
     </button>
   );
 }
