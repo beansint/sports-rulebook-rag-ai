@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useCallback, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ChatInterface } from "../components/ChatInterface";
 import { ModelSelector } from "../components/ModelSelector";
@@ -19,18 +19,35 @@ function ChatBodyInner() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [restoredMessages, setRestoredMessages] = useState<null | { sessionId: string }>(null);
   const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0);
+  const autoSelectedRef = useRef(false);
 
   const handleSelectSession = (id: string) => {
+    autoSelectedRef.current = true;
     setRestoredMessages({ sessionId: id });
     setSidebarOpen(false);
     setSidebarRefreshKey((k) => k + 1);
   };
 
   const handleNewSession = () => {
+    autoSelectedRef.current = true;
     newSession();
     setRestoredMessages(null);
     setSidebarRefreshKey((k) => k + 1);
   };
+
+  // On first load, open the most recent chat automatically — unless the user
+  // arrived with a question to ask (?q=) or has already picked/started a chat.
+  const handleSessionsLoaded = useCallback(
+    (sessions: { id: string }[]) => {
+      if (autoSelectedRef.current) return;
+      autoSelectedRef.current = true;
+      if (initialQuestion) return;
+      if (sessions.length > 0) {
+        setRestoredMessages({ sessionId: sessions[0].id });
+      }
+    },
+    [initialQuestion],
+  );
 
   return (
     <div className="max-w-6xl mx-auto px-4 pt-28 pb-20">
@@ -41,6 +58,7 @@ function ChatBodyInner() {
           refreshKey={sidebarRefreshKey}
           onNewSession={handleNewSession}
           onSelectSession={handleSelectSession}
+          onSessionsLoaded={handleSessionsLoaded}
           open={sidebarOpen}
           onToggle={() => setSidebarOpen((v) => !v)}
         />

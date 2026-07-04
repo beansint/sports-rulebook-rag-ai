@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getSupabaseServer } from "@/lib/supabase/server";
+import { getAuthUser } from "@/lib/auth";
 import { LoginForm } from "./LoginForm";
 
 interface Props {
@@ -8,10 +8,7 @@ interface Props {
 }
 
 export default async function LoginPage({ searchParams }: Props) {
-  const supabase = await getSupabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
 
   if (user) {
     const { next } = await searchParams;

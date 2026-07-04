@@ -165,7 +165,7 @@ export function DashboardPreview() {
                       </span>
                     </span>
                   </div>
-                  <div className="grid grid-cols-1 items-start gap-2 sm:grid-cols-2">
+                  <div className="flex flex-col gap-2">
                     {DEMO_CITATIONS.map((cit, i) => (
                       <CitationCard
                         key={cit.chunkId}

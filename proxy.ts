@@ -23,12 +23,28 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  // Refresh session — required by @supabase/ssr on every middleware pass
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Fast path: verify the access-token JWT locally via getClaims (this project
+  // uses asymmetric ES256 signing keys), avoiding an Auth-server round-trip on
+  // every /chat and /admin navigation.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  let authed = Boolean(claimsData?.claims?.sub);
+  let email =
+    typeof claimsData?.claims?.email === "string"
+      ? claimsData.claims.email
+      : undefined;
 
-  if (!user) {
+  // Fallback: no verifiable local claims (missing/expired token) — validate
+  // against the Auth server. This pass also refreshes the session and rewrites
+  // the auth cookies onto supabaseResponse via the setAll handler above.
+  if (!authed) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    authed = Boolean(user);
+    email = user?.email ?? email;
+  }
+
+  if (!authed) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
     loginUrl.searchParams.set("next", request.nextUrl.pathname);
@@ -37,7 +53,7 @@ export async function proxy(request: NextRequest) {
 
   if (
     request.nextUrl.pathname.startsWith("/admin") &&
-    user.email !== process.env.ADMIN_EMAIL
+    email !== process.env.ADMIN_EMAIL
   ) {
     return new NextResponse("Forbidden", { status: 403 });
   }
