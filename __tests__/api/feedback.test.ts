@@ -12,7 +12,12 @@ vi.mock("next/headers", () => ({
 
 vi.mock("@/lib/supabase/server", () => ({
   getSupabaseServer: vi.fn().mockResolvedValue({
-    auth: { getUser: mockGetUser },
+    auth: {
+      // getAuthUser() tries getClaims() first (local verify) then falls back to
+      // getUser(); returning no claims routes the tests through mockGetUser.
+      getClaims: vi.fn().mockResolvedValue({ data: null, error: null }),
+      getUser: mockGetUser,
+    },
   }),
 }));
 

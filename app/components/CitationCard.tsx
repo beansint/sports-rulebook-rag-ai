@@ -51,8 +51,11 @@ export function CitationCard({
     setPdfError(null);
     setPdfLoading(true);
     // Open the tab synchronously in the click gesture so popup blockers allow
-    // it; navigate it once the signed URL resolves.
-    const win = window.open("", "_blank", "noopener,noreferrer");
+    // it, then navigate it once the signed URL resolves. Do NOT pass "noopener"
+    // to window.open — that makes it return null, so we couldn't drive the tab;
+    // sever the opener reference manually instead.
+    const win = window.open("about:blank", "_blank");
+    if (win) win.opener = null;
     try {
       const res = await fetch(`/api/documents/${citation.documentId}/pdf-url`);
       if (!res.ok) throw new Error(`status ${res.status}`);
@@ -60,7 +63,7 @@ export function CitationCard({
       if (!url) throw new Error("no url");
       const target = `${url}#page=${citation.pageNumber}`;
       if (win) win.location.href = target;
-      else window.open(target, "_blank", "noopener,noreferrer");
+      else window.open(target, "_blank");
     } catch {
       win?.close();
       setPdfError("Couldn't open the source PDF. Try again.");
